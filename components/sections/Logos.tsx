@@ -9,7 +9,7 @@ export function Logos() {
     <section className="border-y border-line bg-bg2">
       <div className="mx-auto w-full max-w-content px-[18px] py-6 md:px-8 lg:px-10">
         <div className="mb-[14px] font-mono text-[10px] uppercase tracking-mono-widest text-muted">
-          // marcas donde nuestra fundadora ha liderado
+          {'// marcas donde nuestra fundadora ha liderado'}
         </div>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           {LOGOS.map((l) => (

@@ -8,8 +8,7 @@ import { Process } from '@/components/sections/Process';
 import { Why } from '@/components/sections/Why';
 import { Founder } from '@/components/sections/Founder';
 import { Faq } from '@/components/sections/Faq';
-
-// Pendiente: ContactForm — bloquea espera de NEXT_PUBLIC_FORMSPREE_ENDPOINT
+import { ContactForm } from '@/components/sections/ContactForm';
 
 export default function Page() {
   return (
@@ -25,6 +24,7 @@ export default function Page() {
         <Why />
         <Founder />
         <Faq />
+        <ContactForm />
       </main>
       <Footer />
     </>

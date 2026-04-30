@@ -20,7 +20,7 @@ export default function AvisoDePrivacidadPage() {
       <main className="min-h-screen">
         <section className="mx-auto w-full max-w-content px-[18px] py-12 md:px-8 lg:px-10">
           <p className="font-mono text-[10.5px] uppercase tracking-[0.15em] text-muted">
-            // legal
+            {'// legal'}
           </p>
           <h1
             className="mt-4 font-sans text-[36px] font-semibold text-ink"
