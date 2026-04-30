@@ -105,7 +105,7 @@ export default function OpengraphImage() {
               height: 9,
               borderRadius: '50%',
               background: '#d4ff3a',
-              display: 'inline-block',
+              display: 'block',
             }}
           />
           PERFORMANCE · CDMX · ROAS 4.8×
@@ -135,7 +135,7 @@ export default function OpengraphImage() {
                 padding: '0 22px',
                 borderRadius: 14,
                 transform: 'rotate(-2deg)',
-                display: 'inline-flex',
+                display: 'flex',
               }}
             >
               CDMX.
