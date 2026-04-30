@@ -40,11 +40,12 @@ const config: Config = {
         card: '18px',
       },
       animation: {
-        // Pulse del dot lime en hero metrics: 2s ease-in-out infinite, opacity 1 ↔ 0.4
-        pulse: 'pulse 2s ease-in-out infinite',
+        // Pulse del dot lime: 2s ease-in-out infinite, opacity 1 ↔ 0.4.
+        // Renombrado a evitar la colisión con animate-pulse builtin de Tailwind.
+        'lime-pulse': 'lime-pulse 2s ease-in-out infinite',
       },
       keyframes: {
-        pulse: {
+        'lime-pulse': {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.4' },
         },
