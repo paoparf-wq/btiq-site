@@ -74,7 +74,7 @@ export function Partner() {
                   {c.title}
                 </div>
                 <div
-                  className="mt-[3px] font-mono text-[9.5px] text-muted"
+                  className="mt-[3px] font-mono text-[9.5px] text-ink2"
                   style={{ letterSpacing: '0.02em' }}
                 >
                   {c.detail}
