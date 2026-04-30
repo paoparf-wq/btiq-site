@@ -21,6 +21,13 @@ export const metadata: Metadata = {
     locale: 'es_MX',
     type: 'website',
   },
+  twitter: {
+    // Tarjeta grande con la imagen OG (la que sirve app/opengraph-image.tsx).
+    card: 'summary_large_image',
+    title: 'btiq digital | Marketing digital boutique en CDMX',
+    description:
+      'Performance, web y eventos para marcas medianas mexicanas. Cada peso invertido te regresa tres.',
+  },
   alternates: { canonical: SITE_URL },
   robots: { index: true, follow: true },
 };
