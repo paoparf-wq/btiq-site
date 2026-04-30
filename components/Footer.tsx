@@ -9,14 +9,16 @@ export function Footer() {
           <Logo size="sm" />
           <span className="font-mono text-[10px] text-muted">© 2026</span>
         </div>
-        <div className="mt-[18px] flex items-center justify-between border-t border-line pt-[14px] font-mono text-[10px] text-muted">
+        <div className="mt-[14px] flex items-center justify-between border-t border-line pt-[6px] font-mono text-[10px] text-muted">
           <Link
             href="/aviso-de-privacidad"
-            className="transition-colors hover:text-ink2"
+            className="inline-flex min-h-[36px] items-center py-2 transition-colors hover:text-ink2"
           >
             Aviso de privacidad
           </Link>
-          <span>Made in CDMX</span>
+          <span className="inline-flex min-h-[36px] items-center py-2">
+            Made in CDMX
+          </span>
         </div>
       </div>
     </footer>

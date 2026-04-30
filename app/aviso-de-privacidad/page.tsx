@@ -22,7 +22,7 @@ export default function AvisoDePrivacidadPage() {
           {/* Volver a inicio */}
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 font-mono text-[10.5px] uppercase tracking-mono-wide text-lime transition-colors hover:text-ink"
+            className="inline-flex min-h-[44px] items-center gap-1.5 py-2 font-mono text-[10.5px] uppercase tracking-mono-wide text-lime transition-colors hover:text-ink"
           >
             <span aria-hidden="true">←</span> Volver a btiq.mx
           </Link>

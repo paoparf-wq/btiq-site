@@ -493,15 +493,20 @@ function ContactStrip() {
     events.whatsappClick();
   }
 
+  // py-2 + line-height da ~36px de alto efectivo: pasa el min de 24px que
+  // Lighthouse exige para touch targets de WCAG 2.1 AA.
+  const linkClass =
+    'inline-flex min-h-[36px] items-center py-2 hover:underline';
+
   return (
     <div
-      className="mt-7 flex flex-col gap-1.5 border-t pt-[18px] font-mono text-[11px]"
+      className="mt-7 flex flex-col border-t pt-[14px] font-mono text-[11px]"
       style={{
         borderColor: 'rgba(13,14,12,0.18)',
         color: 'rgba(13,14,12,0.7)',
       }}
     >
-      <a href={`mailto:${tokens.contact.email}`} className="hover:underline">
+      <a href={`mailto:${tokens.contact.email}`} className={linkClass}>
         → {tokens.contact.email}
       </a>
       <a
@@ -509,11 +514,13 @@ function ContactStrip() {
         target="_blank"
         rel="noopener noreferrer"
         onClick={handleWhatsappClick}
-        className="hover:underline"
+        className={linkClass}
       >
         → WhatsApp directo · {tokens.contact.whatsapp}
       </a>
-      <span>→ {tokens.contact.location}</span>
+      <span className="inline-flex min-h-[36px] items-center py-2">
+        → {tokens.contact.location}
+      </span>
     </div>
   );
 }
