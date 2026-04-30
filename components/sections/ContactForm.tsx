@@ -222,7 +222,7 @@ function FormView({
     <>
       <div
         className="font-mono text-[10.5px] uppercase tracking-mono-widest"
-        style={{ color: 'rgba(13,14,12,0.6)' }}
+        style={{ color: 'rgba(13,14,12,0.85)' }}
       >
         {'// next step'}
       </div>
@@ -242,7 +242,7 @@ function FormView({
       </h2>
       <p
         className="mt-4 max-w-[320px] font-sans text-[14px] leading-[1.55]"
-        style={{ color: 'rgba(13,14,12,0.75)' }}
+        style={{ color: 'rgba(13,14,12,0.85)' }}
       >
         Respuesta en menos de 24 horas con un diagnóstico inicial gratuito.
       </p>
@@ -369,7 +369,7 @@ function FormView({
                     style={{
                       color: on
                         ? tokens.colors.lime
-                        : 'rgba(13,14,12,0.5)',
+                        : 'rgba(13,14,12,0.85)',
                       border: on
                         ? `1px solid ${tokens.colors.lime}`
                         : '1px solid rgba(13,14,12,0.2)',
@@ -405,7 +405,7 @@ function FormView({
           className="mt-2 flex items-center justify-between rounded-xl px-[22px] py-[17px] font-sans text-[14.5px] font-semibold text-lime"
           style={{
             background: submitting
-              ? 'rgba(13,14,12,0.6)'
+              ? 'rgba(13,14,12,0.85)'
               : tokens.colors.bg,
             cursor: submitting ? 'wait' : 'pointer',
             letterSpacing: '-0.01em',
@@ -418,7 +418,7 @@ function FormView({
         <div
           className="mt-1 text-center font-mono text-[10px] leading-[1.55]"
           style={{
-            color: 'rgba(13,14,12,0.6)',
+            color: 'rgba(13,14,12,0.85)',
             letterSpacing: '0.02em',
           }}
         >
@@ -503,7 +503,7 @@ function ContactStrip() {
       className="mt-7 flex flex-col border-t pt-[14px] font-mono text-[11px]"
       style={{
         borderColor: 'rgba(13,14,12,0.18)',
-        color: 'rgba(13,14,12,0.7)',
+        color: 'rgba(13,14,12,0.85)',
       }}
     >
       <a href={`mailto:${tokens.contact.email}`} className={linkClass}>
@@ -548,7 +548,7 @@ function Field({
       <span
         className="flex items-baseline justify-between font-mono text-[9.5px] uppercase"
         style={{
-          color: showErr ? '#7a1818' : 'rgba(13,14,12,0.65)',
+          color: showErr ? '#7a1818' : 'rgba(13,14,12,0.85)',
           letterSpacing: '0.12em',
         }}
       >
@@ -556,7 +556,7 @@ function Field({
           {label}
           {optional && (
             <span
-              className="ml-1.5 normal-case opacity-60"
+              className="ml-1.5 normal-case"
               style={{ letterSpacing: 0 }}
             >
               (opcional)
