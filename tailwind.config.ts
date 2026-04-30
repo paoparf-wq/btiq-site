@@ -11,7 +11,7 @@ const config: Config = {
         surface: '#1a1c18',
         ink: '#f5f4ee',
         ink2: '#cfcec5',
-        muted: '#7a7a72',
+        muted: '#8a8a82',
         lime: {
           DEFAULT: '#d4ff3a',
           hover: '#bce024',

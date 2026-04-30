@@ -10,7 +10,7 @@ export const tokens = {
     surface: '#1a1c18',
     ink: '#f5f4ee',
     ink2: '#cfcec5',
-    muted: '#7a7a72',
+    muted: '#8a8a82',
     lime: '#d4ff3a',
     lime2: '#bce024',
     line: 'rgba(245,244,238,0.10)',
