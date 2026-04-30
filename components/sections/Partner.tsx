@@ -1,8 +1,9 @@
+import Image from 'next/image';
 import { Tag } from '../Tag';
 
 // Sección de partnership Tiendanube — bg2, card con glow lime en esquina sup-derecha,
-// brand row + headline "30 días" en lime + 2x2 grid de capabilities.
-// El cuadrado azul con "T" es placeholder hasta tener el badge oficial.
+// logo oficial de "tiendanube partners" + caption en lime + headline "30 días" +
+// 2x2 grid de capabilities.
 
 const CAPABILITIES = [
   { title: 'Setup completo', detail: 'Tema, productos, pagos, envíos' },
@@ -28,24 +29,21 @@ export function Partner() {
             }}
           />
 
-          <div className="mb-[14px] flex items-center gap-2.5">
-            <div
-              aria-hidden="true"
-              className="flex h-[42px] w-[42px] items-center justify-center rounded-[10px] bg-tiendanube font-sans text-[22px] font-bold text-white"
-              style={{ letterSpacing: '-0.04em' }}
-            >
-              T
+          <div className="mb-[18px]">
+            {/* Logo oficial Tiendanube Partners — sobre placa blanca para que el
+                azul de marca se respete y no compita con el bg dark del card */}
+            <div className="inline-flex items-center justify-center rounded-[10px] bg-white px-3 py-2">
+              <Image
+                src="/tiendanube-partners.webp"
+                alt="Tiendanube Partners — partner oficial"
+                width={160}
+                height={48}
+                className="h-7 w-auto"
+                priority={false}
+              />
             </div>
-            <div>
-              <div
-                className="font-sans text-base font-semibold text-ink"
-                style={{ letterSpacing: '-0.02em' }}
-              >
-                Tiendanube
-              </div>
-              <div className="mt-[3px] font-mono text-[10px] tracking-mono text-lime">
-                PARTNER OFICIAL · MÉXICO
-              </div>
+            <div className="mt-2.5 font-mono text-[10px] tracking-mono text-lime">
+              PARTNER OFICIAL · MÉXICO
             </div>
           </div>
 

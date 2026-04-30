@@ -1,9 +1,9 @@
+import Image from 'next/image';
 import { Tag } from '../Tag';
 import { tokens } from '@/lib/tokens';
 
-// Founder — bg2, avatar circular 72px con gradient lime + iniciales "PP".
+// Founder — bg2, avatar circular 72px con la foto de Paola.
 // Pull quote con frase clave en lime + card link a LinkedIn.
-// La foto de Paola se cargará en el futuro (handoff: usar placeholder por ahora).
 
 export function Founder() {
   return (
@@ -12,15 +12,15 @@ export function Founder() {
         <Tag>Fundadora</Tag>
 
         <div className="mt-[18px] flex items-center gap-3.5">
-          <div
-            aria-hidden="true"
-            className="flex h-[72px] w-[72px] flex-shrink-0 items-center justify-center rounded-full font-sans text-[26px] font-semibold text-bg"
-            style={{
-              background:
-                'linear-gradient(135deg, #d4ff3a, #6f8f1c)',
-            }}
-          >
-            PP
+          <div className="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-full ring-1 ring-line2">
+            <Image
+              src="/founder.jpg"
+              alt="Paola Parra, fundadora de btiq digital"
+              fill
+              sizes="72px"
+              className="object-cover"
+              priority={false}
+            />
           </div>
           <div>
             <div
