@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import Script from 'next/script';
+import { StructuredData } from '@/components/StructuredData';
 import './globals.css';
 
 const SITE_URL =
@@ -51,6 +52,7 @@ export default function RootLayout({
       className={`${GeistSans.variable} ${GeistMono.variable}`}
     >
       <body>
+        <StructuredData />
         {GA_ID && (
           <>
             <Script
