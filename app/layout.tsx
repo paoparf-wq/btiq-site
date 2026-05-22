@@ -49,7 +49,9 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${GeistSans.variable} ${GeistMono.variable}`}
+      // 'dark' activa las CSS variables dark de shadcn para que los
+      // componentes de Cult UI sean coherentes con la paleta dark del sitio.
+      className={`dark ${GeistSans.variable} ${GeistMono.variable}`}
     >
       <body>
         <StructuredData />

@@ -26,7 +26,7 @@ export function Logo({ size = 'md' }: { size?: 'md' | 'sm' }) {
         )}
         style={{ letterSpacing: '-0.015em' }}
       >
-        btiq<span className="font-normal text-muted">/digital</span>
+        btiq<span className="font-normal text-faint">/digital</span>
       </span>
     </div>
   );

@@ -30,7 +30,7 @@ export function Founder() {
               Paola Parra
             </div>
             <div
-              className="mt-1 font-mono text-[10.5px] text-muted"
+              className="mt-1 font-mono text-[10.5px] text-faint"
               style={{ letterSpacing: '0.05em' }}
             >
               Digital Marketing Director

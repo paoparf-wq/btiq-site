@@ -63,7 +63,7 @@ export function Services() {
         >
           Tres motores.
           <br />
-          <span className="text-muted">Una promesa.</span>
+          <span className="text-faint">Una promesa.</span>
         </h2>
 
         <div className="mt-[26px] flex flex-col gap-3">
@@ -91,7 +91,7 @@ function ServiceCard({ service: s }: { service: Service }) {
           >
             {s.metric.value}
           </div>
-          <div className="mt-[3px] font-mono text-[8.5px] uppercase tracking-mono-wide text-muted">
+          <div className="mt-[3px] font-mono text-[8.5px] uppercase tracking-mono-wide text-faint">
             {s.metric.label}
           </div>
         </div>

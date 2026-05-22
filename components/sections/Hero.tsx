@@ -43,7 +43,7 @@ export function Hero() {
         >
           Cada peso
           <br />
-          <span className="text-muted">invertido</span>
+          <span className="text-faint">invertido</span>
           <br />
           te regresa{' '}
           <span
@@ -86,7 +86,7 @@ export function Hero() {
         {/* Live metrics card */}
         <div className="mt-[30px] rounded-card border border-line2 bg-surface px-4 py-[18px]">
           <div className="mb-[14px] flex items-center justify-between">
-            <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-mono-wide text-muted">
+            <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-mono-wide text-faint">
               <span
                 aria-hidden="true"
                 className="inline-block h-1.5 w-1.5 animate-lime-pulse rounded-full bg-lime"
@@ -115,7 +115,7 @@ export function Hero() {
                 <div className="mt-1.5 font-mono text-[9.5px] uppercase tracking-mono-wide text-ink2">
                   {m.l}
                 </div>
-                <div className="mt-[3px] font-mono text-[9px] text-muted">
+                <div className="mt-[3px] font-mono text-[9px] text-faint">
                   {m.sub}
                 </div>
               </div>

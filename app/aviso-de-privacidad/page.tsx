@@ -38,7 +38,7 @@ export default function AvisoDePrivacidadPage() {
             >
               Aviso de privacidad
             </h1>
-            <p className="mt-3 font-mono text-[10.5px] uppercase tracking-mono-wide text-muted">
+            <p className="mt-3 font-mono text-[10.5px] uppercase tracking-mono-wide text-faint">
               Última actualización: 16 de abril de 2026
             </p>
           </header>

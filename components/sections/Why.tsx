@@ -64,7 +64,7 @@ export function Why() {
               >
                 {s.label}
               </div>
-              <div className="mt-1.5 font-sans text-[11.5px] leading-[1.45] text-muted">
+              <div className="mt-1.5 font-sans text-[11.5px] leading-[1.45] text-faint">
                 {s.description}
               </div>
             </div>
