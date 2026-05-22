@@ -1,18 +1,52 @@
 'use client';
 
+import { useRef } from 'react';
+import { useInView } from 'motion/react';
 import { Tag } from '../Tag';
+import { AnimatedNumber } from '@/components/ui/animated-number';
 import { events } from '@/lib/analytics';
 
 // Hero — Direction B aprobado.
 // Headline: 50/600/0.95/-0.04em con "tres." en chip lime rotado -2deg.
 // Live metrics card con dot lime pulsante (animate-lime-pulse).
+// Las métricas usan AnimatedNumber de Cult UI: cuentan de 0 al valor real
+// cuando la card entra en viewport (efecto data-driven).
 // CTAs: primario lime (agenda_click hero) + secundario outline scroll-down.
 
 const METRICS = [
-  { v: '4.8×', l: 'ROAS', sub: '+38% vs benchmark' },
-  { v: '127%', l: 'Conv.', sub: 'lift 6 meses' },
-  { v: '-42%', l: 'CAC', sub: 'reducción media' },
+  { value: 4.8, precision: 1, suffix: '×', l: 'ROAS', sub: '+38% vs benchmark' },
+  { value: 127, precision: 0, suffix: '%', l: 'Conv.', sub: 'lift 6 meses' },
+  { value: -42, precision: 0, suffix: '%', l: 'CAC', sub: 'reducción media' },
 ] as const;
+
+// Cuenta de 0 al valor cuando entra en viewport (una sola vez). tabular-nums
+// mantiene el ancho de los dígitos estable para evitar layout shift.
+function CountUp({
+  value,
+  precision,
+  suffix,
+}: {
+  value: number;
+  precision: number;
+  suffix: string;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: '-40px' });
+  return (
+    <span ref={ref} className="tabular-nums">
+      <AnimatedNumber
+        value={inView ? value : 0}
+        precision={precision}
+        // Spring más lento y suave que el default (stiffness 75): el conteo
+        // tarda ~2s y no rebota.
+        mass={1}
+        stiffness={32}
+        damping={20}
+        format={(n) => `${n.toFixed(precision)}${suffix}`}
+      />
+    </span>
+  );
+}
 
 export function Hero() {
   function handlePrimaryClick() {
@@ -110,7 +144,11 @@ export function Hero() {
                   className="font-sans text-[26px] font-semibold leading-none text-lime"
                   style={{ letterSpacing: '-0.03em' }}
                 >
-                  {m.v}
+                  <CountUp
+                    value={m.value}
+                    precision={m.precision}
+                    suffix={m.suffix}
+                  />
                 </div>
                 <div className="mt-1.5 font-mono text-[9.5px] uppercase tracking-mono-wide text-ink2">
                   {m.l}
