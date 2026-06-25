@@ -122,6 +122,14 @@ export function ContactForm() {
       servicios: form.servicios.join(', '),
     };
 
+    // Enviar el lead a HubSpot CRM en paralelo. No bloquea el éxito del
+    // formulario: si HubSpot falla, Formspree ya capturó el lead.
+    void fetch('/api/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).catch(() => {});
+
     try {
       const [response] = await Promise.all([
         fetch(FORMSPREE_ENDPOINT ?? '', {

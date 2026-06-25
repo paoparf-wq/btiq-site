@@ -40,6 +40,8 @@ export const viewport: Viewport = {
 };
 
 const GA_ID = process.env.NEXT_PUBLIC_GA4_ID;
+const HUBSPOT_PORTAL_ID =
+  process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID ?? '51657541';
 
 export default function RootLayout({
   children,
@@ -70,6 +72,13 @@ export default function RootLayout({
               `}
             </Script>
           </>
+        )}
+        {HUBSPOT_PORTAL_ID && (
+          <Script
+            id="hs-script-loader"
+            src={`//js.hs-scripts.com/${HUBSPOT_PORTAL_ID}.js`}
+            strategy="afterInteractive"
+          />
         )}
         {children}
       </body>
