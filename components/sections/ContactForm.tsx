@@ -148,6 +148,7 @@ export function ContactForm() {
       }
 
       events.formSubmit();
+      events.adsLeadConversion();
       setSubmitted(true);
     } catch {
       setNetworkError(

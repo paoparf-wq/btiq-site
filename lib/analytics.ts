@@ -31,4 +31,12 @@ export const events = {
     trackEvent('service_select', { service }),
   faqOpen: (questionIndex: number) =>
     trackEvent('faq_open', { question_index: questionIndex }),
+  // Conversión de Google Ads: envío de formulario (lead). Se dispara al
+  // completar el formulario de contacto con éxito.
+  adsLeadConversion: () =>
+    trackEvent('conversion', {
+      send_to: 'AW-18284380417/eITICIzP8sccEIGC1o5E',
+      value: 1.0,
+      currency: 'MXN',
+    }),
 };
