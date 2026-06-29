@@ -40,6 +40,10 @@ export const viewport: Viewport = {
 };
 
 const GA_ID = process.env.NEXT_PUBLIC_GA4_ID;
+// Google Ads conversion ID — aparece en el HTML, no es secreto. Hardcodeado
+// para no requerir configuración extra en Vercel; cambiar aquí si Paola usa
+// otra cuenta de Ads.
+const ADS_ID = 'AW-18284380417';
 const HUBSPOT_PORTAL_ID =
   process.env.NEXT_PUBLIC_HUBSPOT_PORTAL_ID ?? '51657541';
 
@@ -57,22 +61,22 @@ export default function RootLayout({
     >
       <body>
         <StructuredData />
-        {GA_ID && (
-          <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-              strategy="afterInteractive"
-            />
-            <Script id="ga4-init" strategy="afterInteractive">
-              {`
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', '${GA_ID}', { send_page_view: true });
-              `}
-            </Script>
-          </>
-        )}
+        {/* gtag.js — un solo script para GA4 (analytics) y Google Ads
+            (conversiones). El src puede usar cualquiera de los dos IDs;
+            cada config() registra una propiedad distinta. */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID ?? ADS_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            ${GA_ID ? `gtag('config', '${GA_ID}', { send_page_view: true });` : ''}
+            gtag('config', '${ADS_ID}');
+          `}
+        </Script>
         {HUBSPOT_PORTAL_ID && (
           <Script
             id="hs-script-loader"
