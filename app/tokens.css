@@ -1,0 +1,27 @@
+/* btiq digital — sistema "Nómina × Marcador".
+   Fuente de verdad de color, tipografía, layout. Importado una sola vez
+   en globals.css. Los tokens legacy (bg/lime/ink/faint) siguen viviendo
+   en tailwind.config.ts para no romper /diagnostico. */
+
+:root {
+  /* color — 8 tokens semánticos */
+  --base: #0d0e0c;                    /* fondo de página */
+  --surface-1: #161814;               /* tarjetas, bloques, inputs */
+  --surface-2: #20231d;               /* elevado: hover de tarjeta, chip activo */
+  --brand: #ede04a;                  /* ÚNICO acento: CTA + palabra marcada */
+  --texto-1: #f4f5f0;                 /* titulares y copy principal      17.66:1 AAA */
+  --texto-2: #989995;                 /* copy secundario (60%)            6.72:1 AA  */
+  --texto-3: #7c7d79;                 /* labels mono, metadatos (48%)     4.75:1 AA  */
+  --texto-4: #656663;                 /* 38% — decorativo, no legible               */
+  --borde: rgb(244 245 240 / 0.07);   /* hairline 1px */
+
+  /* derivados del acento — nunca colores nuevos */
+  --glow: color-mix(in oklab, var(--brand) 12%, transparent);
+  --shadow-hover: 0 18px 44px -12px color-mix(in oklab, var(--brand) 8%, transparent);
+  --borde-hover: color-mix(in oklab, var(--brand) 34%, transparent);
+
+  /* layout */
+  --gut: clamp(20px, 5vw, 64px);
+  --maxw: 1240px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}

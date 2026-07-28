@@ -23,7 +23,11 @@ export function trackEvent(name: string, params?: GtagEventParams) {
 // Eventos del sitio anterior (mantener nombres exactos)
 export const events = {
   formSubmit: () => trackEvent('form_submit', { location: 'contact' }),
-  whatsappClick: () => trackEvent('whatsapp_click', { location: 'contact' }),
+  // location default 'contact' preserva el evento del contact strip del home;
+  // /gracias pasa 'thankyou' para separar leads que pasan al WhatsApp tras
+  // enviar el form.
+  whatsappClick: (location: 'contact' | 'thankyou' = 'contact') =>
+    trackEvent('whatsapp_click', { location }),
   agendaHeaderClick: () => trackEvent('agenda_click', { location: 'header' }),
   agendaHeroClick: () => trackEvent('agenda_click', { location: 'hero' }),
   // Adicionales

@@ -3,6 +3,7 @@ import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import Script from 'next/script';
 import { StructuredData } from '@/components/StructuredData';
+import { display, mono } from '@/lib/fonts';
 import './globals.css';
 
 const SITE_URL =
@@ -12,22 +13,21 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: 'btiq digital | Marketing digital boutique en CDMX',
   description:
-    'Performance marketing, web y eventos corporativos para marcas medianas mexicanas. Cada peso invertido te regresa tres. Partner oficial de Tiendanube.',
+    'Performance marketing, web y eventos corporativos para marcas medianas mexicanas. Sin intermediarios. Sin métricas que no venden. Partner oficial de Tiendanube.',
   openGraph: {
-    title: 'btiq digital | Marketing digital boutique en CDMX',
+    title: 'btiq digital | Estamos en tu nómina',
     description:
-      'Cada peso invertido te regresa tres. Sin intermediarios. Sin métricas que no venden.',
+      'No somos tu agencia. Estamos en tu nómina. Performance marketing, web y eventos para marcas medianas mexicanas.',
     url: SITE_URL,
     siteName: 'btiq digital',
     locale: 'es_MX',
     type: 'website',
   },
   twitter: {
-    // Tarjeta grande con la imagen OG (la que sirve app/opengraph-image.tsx).
     card: 'summary_large_image',
-    title: 'btiq digital | Marketing digital boutique en CDMX',
+    title: 'btiq digital | Estamos en tu nómina',
     description:
-      'Performance, web y eventos para marcas medianas mexicanas. Cada peso invertido te regresa tres.',
+      'Performance, web y eventos para marcas medianas mexicanas. Hablas con los dueños.',
   },
   alternates: { canonical: SITE_URL },
   robots: { index: true, follow: true },
@@ -57,7 +57,9 @@ export default function RootLayout({
       lang="es"
       // 'dark' activa las CSS variables dark de shadcn para que los
       // componentes de Cult UI sean coherentes con la paleta dark del sitio.
-      className={`dark ${GeistSans.variable} ${GeistMono.variable}`}
+      // Cargamos las 4 fuentes en <html>: Bricolage+JetBrains para el home
+      // (Nómina × Marcador) y Geist Sans+Mono para /diagnostico legacy.
+      className={`dark ${display.variable} ${mono.variable} ${GeistSans.variable} ${GeistMono.variable}`}
     >
       <body>
         <StructuredData />
