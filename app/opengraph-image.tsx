@@ -3,16 +3,19 @@ import { ImageResponse } from 'next/og';
 // Open Graph image — lo que ven WhatsApp, Slack, LinkedIn, X, iMessage,
 // etc. cuando alguien comparte un link a btiq.mx.
 //
-// Diseño: paleta dark del sitio + acento lime + headline corto que comunica
-// "agencia de marketing digital". El recipient debe entender en 2s qué es btiq
-// sin tener que abrir el link.
+// Rediseñada con la dirección "Nómina × Marcador":
+// - Fondo base #0d0e0c con glow sutil amarillo
+// - Wordmark con cuadrado texto-1 crema + "btiq/digital"
+// - Headline "No somos tu agencia. Estamos en tu nómina." con marcador
+//   amarillo #ede04a inclinado -9° sobre "nómina"
+// - Caption mono amarilla arriba: PERFORMANCE · CDMX · ROAS 4.8×
+// - Tagline en texto-2 (gris)
 //
-// Tamaño 1200×630 — estándar de Facebook/OG, también respetado por todas
-// las demás plataformas.
+// 1200×630 (estándar Facebook/OG).
 
 export const runtime = 'edge';
 export const alt =
-  'btiq digital — Marketing digital boutique en CDMX. Performance, web y eventos para marcas medianas mexicanas.';
+  'btiq digital — No somos tu agencia. Estamos en tu nómina. Performance marketing, web y eventos para marcas medianas mexicanas.';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -30,21 +33,21 @@ export default function OpengraphImage() {
           position: 'relative',
         }}
       >
-        {/* Glow lime decorativo en esquina superior derecha */}
+        {/* Glow amarillo sutil abajo-derecha (equivalente al hero) */}
         <div
           style={{
             position: 'absolute',
-            top: -200,
-            right: -200,
-            width: 600,
-            height: 600,
+            bottom: -280,
+            right: -150,
+            width: 720,
+            height: 720,
             borderRadius: '50%',
             background:
-              'radial-gradient(circle, rgba(212,255,58,0.18), transparent 70%)',
+              'radial-gradient(circle, rgba(237,224,74,0.14), transparent 70%)',
           }}
         />
 
-        {/* Header — wordmark btiq/digital */}
+        {/* Wordmark superior */}
         <div
           style={{
             display: 'flex',
@@ -57,8 +60,8 @@ export default function OpengraphImage() {
             style={{
               width: 44,
               height: 44,
-              borderRadius: 11,
-              background: '#d4ff3a',
+              borderRadius: 9,
+              background: '#f4f5f0',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -73,23 +76,23 @@ export default function OpengraphImage() {
           <div
             style={{
               fontSize: 26,
-              fontWeight: 600,
-              color: '#f5f4ee',
-              letterSpacing: '-0.015em',
+              fontWeight: 700,
+              color: '#f4f5f0',
+              letterSpacing: '-0.02em',
               display: 'flex',
             }}
           >
             <span>btiq</span>
-            <span style={{ color: '#7a7a72', fontWeight: 400 }}>/digital</span>
+            <span style={{ color: '#7c7d79', fontWeight: 500 }}>/digital</span>
           </div>
         </div>
 
-        {/* Eyebrow mono */}
+        {/* Caption mono amarillo */}
         <div
           style={{
             marginTop: 'auto',
             fontSize: 20,
-            color: '#d4ff3a',
+            color: '#ede04a',
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             fontFamily: 'monospace',
@@ -104,41 +107,42 @@ export default function OpengraphImage() {
               width: 9,
               height: 9,
               borderRadius: '50%',
-              background: '#d4ff3a',
+              background: '#ede04a',
               display: 'block',
             }}
           />
           PERFORMANCE · CDMX · ROAS 4.8×
         </div>
 
-        {/* Headline */}
+        {/* Headline con marcador amarillo en "nómina" */}
         <div
           style={{
             marginTop: 28,
-            fontSize: 96,
-            fontWeight: 600,
-            color: '#f5f4ee',
-            letterSpacing: '-0.04em',
-            lineHeight: 0.95,
+            fontSize: 84,
+            fontWeight: 700,
+            color: '#f4f5f0',
+            letterSpacing: '-0.03em',
+            lineHeight: 0.98,
             display: 'flex',
             flexDirection: 'column',
             zIndex: 1,
           }}
         >
-          <span>Marketing digital</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <span style={{ color: '#7a7a72' }}>boutique en</span>
+          <span>No somos tu agencia.</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <span>Estamos en tu</span>
             <span
               style={{
-                background: '#d4ff3a',
+                background: '#ede04a',
                 color: '#0d0e0c',
-                padding: '0 22px',
-                borderRadius: 14,
-                transform: 'rotate(-2deg)',
+                padding: '0 24px',
+                transform: 'skewX(-9deg)',
                 display: 'flex',
               }}
             >
-              CDMX.
+              <span style={{ transform: 'skewX(9deg)', display: 'flex' }}>
+                nómina.
+              </span>
             </span>
           </span>
         </div>
@@ -146,17 +150,17 @@ export default function OpengraphImage() {
         {/* Tagline */}
         <div
           style={{
-            marginTop: 28,
-            fontSize: 26,
-            color: '#cfcec5',
-            lineHeight: 1.4,
+            marginTop: 26,
+            fontSize: 24,
+            color: '#989995',
+            lineHeight: 1.42,
             maxWidth: 980,
             zIndex: 1,
             display: 'flex',
           }}
         >
-          Performance, web y eventos para marcas medianas mexicanas. Cada peso
-          invertido te regresa tres.
+          Performance marketing, web y eventos para marcas medianas mexicanas.
+          Hablas con los dueños.
         </div>
       </div>
     ),

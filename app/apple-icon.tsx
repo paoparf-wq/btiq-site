@@ -15,7 +15,8 @@ export default function AppleIcon() {
         style={{
           width: '100%',
           height: '100%',
-          background: '#d4ff3a',
+          // Logo del sitio nuevo: cuadrado texto-1 (crema) con "b" en base (dark).
+          background: '#f4f5f0',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
