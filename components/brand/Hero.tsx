@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import Link from 'next/link';
 import { useInView } from 'motion/react';
 import { AnimatedNumber } from '@/components/ui/animated-number';
 import { AnimatedMark } from './AnimatedMark';
@@ -134,12 +135,12 @@ export function Hero() {
           >
             Agenda una llamada
           </a>
-          <a
-            href="#servicios"
+          <Link
+            href="/cotizador"
             className="inline-flex items-center gap-2.5 rounded-[6px] border border-borde bg-transparent px-[18px] py-3 font-mono text-[11px] uppercase tracking-[0.08em] text-texto-2 transition-colors duration-[220ms] hover:border-texto-4 hover:text-texto-1"
           >
-            <span aria-hidden="true">↓</span> Ver servicios
-          </a>
+            Calcula tu ahorro <span aria-hidden="true">→</span>
+          </Link>
         </div>
 
         {/* Métricas — grid 3 cols con hairlines internos via gap:1px sobre borde */}
