@@ -2,9 +2,12 @@ import Link from 'next/link';
 import { Logo } from '@/components/brand/Logo';
 import { Footer } from '@/components/brand/Footer';
 import { CotizadorQuiz } from './CotizadorQuiz';
+import { ReportPreview } from './ReportPreview';
 
-// /cotizador — landing de campaña con quiz interactivo. Nav mínimo (sin
-// escape hatches que distraigan del funnel) + hero corto + quiz + footer.
+// /cotizador — landing de campaña con quiz interactivo de 5 pasos que
+// entrega el reporte EN PANTALLA al instante (no promesa de 24h).
+// Bajo el quiz mostramos un mockup del reporte para dar dinamismo y
+// preview de lo que se recibe.
 
 export default function CotizadorPage() {
   return (
@@ -55,12 +58,19 @@ export default function CotizadorPage() {
                 lineHeight: 1.58,
               }}
             >
-              3 preguntas, 60 segundos. Te decimos cuánto estás perdiendo cada
-              mes en comisiones y apps — y cómo bajarlo.
+              5 preguntas rápidas. Te mostramos el reporte en pantalla al
+              instante — con desglose de comisiones, apps y envíos.
             </p>
           </div>
 
           <CotizadorQuiz />
+        </div>
+
+        {/* Preview del reporte — solo cuando ya hicieron scroll */}
+        <div className="relative mx-auto mt-[clamp(64px,10vw,140px)] max-w-site px-gut">
+          <div className="border-t border-borde pt-[clamp(48px,7vw,80px)]">
+            <ReportPreview />
+          </div>
         </div>
       </main>
 

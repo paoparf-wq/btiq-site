@@ -1,21 +1,21 @@
 'use client';
 
-// Cotizador — quiz interactivo de 3 pasos que calcula el ahorro mensual
-// estimado de la tienda del prospecto. No menciona a Tiendanube (aunque el
-// baseline oculto para el cálculo del "ahorro" corresponde a una plataforma
-// con 0% de comisión y bajo overhead de apps). La propuesta específica se
-// hace en la llamada.
+// Cotizador — quiz de 5 pasos que calcula el ahorro operativo mensual
+// estimado con base en comision de plataforma, apps overhead, comision por
+// venta que el usuario reporta y costo promedio de envio.
 //
-// Flow:
-//   1. URL de la tienda → API detect-platform + confirmar/cambiar
-//   2. Rango de ventas mensuales
-//   3. Nombre + Email + WhatsApp (opcional) → POST Formspree + resultado
+// Flujo:
+//   1. URL de la tienda -> API detect-platform + confirmar
+//   2. Ventas mensuales (rango)
+//   3. Costo promedio de envio por pedido (rango)
+//   4. Comision total por venta que paga hoy (rango, o "no sé")
+//   5. Nombre + email + WhatsApp -> POST Formspree + resultado LIVE
 //
-// Al llegar al resultado dispara events.formSubmit + events.adsLeadConversion.
+// Resultado se entrega EN PANTALLA al instante con desglose completo.
+// No hay promesa de "reporte en 24h" — es reporte instantáneo.
 
 import { useMemo, useState, type FormEvent } from 'react';
 import { events } from '@/lib/analytics';
-import { tokens } from '@/lib/tokens';
 
 const FORMSPREE_ENDPOINT = process.env.NEXT_PUBLIC_FORMSPREE_ENDPOINT;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -33,9 +33,6 @@ type Platform =
   | 'bigcommerce'
   | 'other';
 
-// Etiquetas para el select de "cambiar plataforma". Tiendanube incluido
-// para transparencia — si el prospecto ya la usa, el ahorro será chico
-// (baseline), y honestamente no le mentimos.
 const PLATFORM_LABELS: Record<Platform, string> = {
   shopify: 'Shopify',
   woocommerce: 'WooCommerce',
@@ -48,23 +45,23 @@ const PLATFORM_LABELS: Record<Platform, string> = {
   other: 'Otra / tienda propia',
 };
 
-// Costos aproximados por plataforma — comisión (% del GMV) y overhead
-// mensual de apps/plugins en MXN. Números redondos, honestos, del handoff.
-// Baseline (para calcular ahorro): plataforma con 0% comisión + apps
-// nativas → ~$400/mes de overhead residual.
+// Costos default por plataforma (comision % del GMV + apps mensuales MXN).
+// Se usan cuando el usuario elige "No lo sé" en la comision.
 const PLATFORM_COSTS: Record<Platform, { fee: number; apps: number }> = {
-  shopify:      { fee: 0.020, apps: 1200 },
-  wix:          { fee: 0.025, apps: 700 },
-  vtex:         { fee: 0.020, apps: 2500 },
-  magento:      { fee: 0.000, apps: 3000 },
-  woocommerce:  { fee: 0.000, apps: 900 },
-  squarespace:  { fee: 0.030, apps: 500 },
-  bigcommerce:  { fee: 0.015, apps: 900 },
-  other:        { fee: 0.015, apps: 600 },
-  tiendanube:   { fee: 0.000, apps: 400 }, // baseline: bajo overhead
+  shopify:     { fee: 0.020, apps: 1200 },
+  wix:         { fee: 0.025, apps: 700 },
+  vtex:        { fee: 0.020, apps: 2500 },
+  magento:     { fee: 0.000, apps: 3000 },
+  woocommerce: { fee: 0.000, apps: 900 },
+  squarespace: { fee: 0.030, apps: 500 },
+  bigcommerce: { fee: 0.015, apps: 900 },
+  other:       { fee: 0.015, apps: 600 },
+  tiendanube:  { fee: 0.000, apps: 400 },
 };
 
-const BASELINE_APPS = 400; // apps residuales de la plataforma "óptima"
+const BASELINE_APPS = 400; // apps residuales en plataforma óptima
+const AVG_TICKET = 600;    // ticket promedio MXN (para estimar # pedidos)
+const SHIPPING_OPTIMIZATION = 0.15; // 15% ahorro por negociar volumen
 
 const SALES_RANGES = [
   { value: 'r1', label: 'Menos de $50K MXN', gmv: 25_000 },
@@ -74,11 +71,29 @@ const SALES_RANGES = [
   { value: 'r5', label: 'Más de $1M MXN', gmv: 1_500_000 },
 ] as const;
 
+const SHIPPING_RANGES = [
+  { value: 's1', label: 'Menos de $60 MXN', cost: 50 },
+  { value: 's2', label: '$60 – $100 MXN', cost: 80 },
+  { value: 's3', label: '$100 – $150 MXN', cost: 125 },
+  { value: 's4', label: '$150 – $200 MXN', cost: 175 },
+  { value: 's5', label: 'Más de $200 MXN', cost: 220 },
+  { value: 's0', label: 'Envío gratis / lo absorbo', cost: 0 },
+] as const;
+
+const CPT_RANGES = [
+  { value: 'c1', label: 'Menos de 3% (solo gateway)', pct: 0.025 },
+  { value: 'c2', label: '3% – 5%', pct: 0.04 },
+  { value: 'c3', label: '5% – 7%', pct: 0.06 },
+  { value: 'c4', label: '7% – 10%', pct: 0.085 },
+  { value: 'c5', label: 'Más de 10%', pct: 0.12 },
+  { value: 'c0', label: 'No lo sé — usa el default de mi plataforma', pct: -1 },
+] as const;
+
 function formatMXN(n: number) {
   return new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 }).format(n);
 }
 
-type Step = 1 | 2 | 3 | 4; // 4 = resultado
+type Step = 1 | 2 | 3 | 4 | 5 | 6; // 6 = resultado
 
 function delay(ms: number) {
   return new Promise<void>((r) => setTimeout(r, ms));
@@ -87,17 +102,19 @@ function delay(ms: number) {
 export function CotizadorQuiz() {
   const [step, setStep] = useState<Step>(1);
 
-  // Screen 1 — URL + plataforma
+  // Screen 1
   const [url, setUrl] = useState('');
   const [urlError, setUrlError] = useState<string | null>(null);
   const [detecting, setDetecting] = useState(false);
   const [platform, setPlatform] = useState<Platform | ''>('');
-  const [detected, setDetected] = useState(false); // true = fue auto-detectado
+  const [detected, setDetected] = useState(false);
 
-  // Screen 2 — ventas
-  const [range, setRange] = useState<string>('');
+  // Screens 2/3/4
+  const [rangeSales, setRangeSales] = useState('');
+  const [rangeShipping, setRangeShipping] = useState('');
+  const [rangeCpt, setRangeCpt] = useState('');
 
-  // Screen 3 — datos + submit
+  // Screen 5
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
@@ -107,22 +124,67 @@ export function CotizadorQuiz() {
   const [submitting, setSubmitting] = useState(false);
   const [networkError, setNetworkError] = useState<string | null>(null);
 
-  // Cálculo del ahorro (solo válido si tenemos platform + range)
-  const savings = useMemo(() => {
-    if (!platform || !range) return null;
-    const r = SALES_RANGES.find((x) => x.value === range);
-    if (!r) return null;
-    const gmv = r.gmv;
-    const cost = PLATFORM_COSTS[platform];
-    const currentFee = Math.round(gmv * cost.fee);
-    const currentApps = cost.apps;
-    const currentTotal = currentFee + currentApps;
-    // El "objetivo" es reducir a baseline (0% comisión + $400 apps)
-    const targetTotal = BASELINE_APPS;
-    const monthlySavings = Math.max(0, currentTotal - targetTotal);
-    const annualSavings = monthlySavings * 12;
-    return { gmv, currentFee, currentApps, currentTotal, monthlySavings, annualSavings };
-  }, [platform, range]);
+  const report = useMemo(() => {
+    if (!platform || !rangeSales || !rangeShipping || !rangeCpt) return null;
+    const sales = SALES_RANGES.find((r) => r.value === rangeSales);
+    const shipping = SHIPPING_RANGES.find((r) => r.value === rangeShipping);
+    const cpt = CPT_RANGES.find((r) => r.value === rangeCpt);
+    if (!sales || !shipping || !cpt) return null;
+
+    const gmv = sales.gmv;
+    const orders = Math.round(gmv / AVG_TICKET);
+    const platformDefault = PLATFORM_COSTS[platform];
+
+    // Comisión efectiva: si el user reportó (>=0) la tomamos; si no, el default de la plataforma.
+    const effectiveFeePct = cpt.pct >= 0 ? cpt.pct : platformDefault.fee;
+    const feeUsedSource: 'reported' | 'default' =
+      cpt.pct >= 0 ? 'reported' : 'default';
+
+    const currentFee = Math.round(gmv * effectiveFeePct);
+    const currentApps = platformDefault.apps;
+    const currentShipping = shipping.cost * orders;
+    const currentTotal = currentFee + currentApps + currentShipping;
+
+    // Baseline optimizado
+    const baselineFee = 0;
+    const baselineApps = BASELINE_APPS;
+    const baselineShipping = Math.round(
+      shipping.cost * orders * (1 - SHIPPING_OPTIMIZATION),
+    );
+    const baselineTotal = baselineFee + baselineApps + baselineShipping;
+
+    const savingsFee = currentFee - baselineFee;
+    const savingsApps = Math.max(0, currentApps - baselineApps);
+    const savingsShipping = currentShipping - baselineShipping;
+    const savingsMonthly = savingsFee + savingsApps + savingsShipping;
+    const savingsAnnual = savingsMonthly * 12;
+
+    // "Score" simple: cuánto de tu gasto es evitable
+    const score = currentTotal > 0
+      ? Math.round((savingsMonthly / currentTotal) * 100)
+      : 0;
+
+    return {
+      gmv,
+      orders,
+      effectiveFeePct,
+      feeUsedSource,
+      currentFee,
+      currentApps,
+      currentShipping,
+      currentTotal,
+      baselineFee,
+      baselineApps,
+      baselineShipping,
+      baselineTotal,
+      savingsFee,
+      savingsApps,
+      savingsShipping,
+      savingsMonthly,
+      savingsAnnual,
+      score,
+    };
+  }, [platform, rangeSales, rangeShipping, rangeCpt]);
 
   async function handleUrlNext() {
     const raw = url.trim();
@@ -164,13 +226,14 @@ export function CotizadorQuiz() {
       setWhatsappErr('Formato inválido');
       ok = false;
     } else setWhatsappErr(null);
-    if (!ok || submitting || !platform || !range || !savings) return;
+    if (!ok || submitting || !report) return;
 
     setNetworkError(null);
     setSubmitting(true);
 
-    const rangeLabel =
-      SALES_RANGES.find((r) => r.value === range)?.label ?? range;
+    const salesLbl = SALES_RANGES.find((r) => r.value === rangeSales)?.label;
+    const shipLbl = SHIPPING_RANGES.find((r) => r.value === rangeShipping)?.label;
+    const cptLbl = CPT_RANGES.find((r) => r.value === rangeCpt)?.label;
 
     const payload = {
       origen: 'cotizador',
@@ -178,11 +241,16 @@ export function CotizadorQuiz() {
       email: email.trim(),
       whatsapp: whatsapp.trim(),
       tienda_url: url.trim(),
-      plataforma: PLATFORM_LABELS[platform],
+      plataforma: PLATFORM_LABELS[platform as Platform],
       plataforma_detectada: detected ? 'sí' : 'no',
-      rango_ventas: rangeLabel,
-      ahorro_mensual_est: `$${formatMXN(savings.monthlySavings)} MXN`,
-      ahorro_anual_est: `$${formatMXN(savings.annualSavings)} MXN`,
+      rango_ventas: salesLbl ?? rangeSales,
+      envio_promedio: shipLbl ?? rangeShipping,
+      comision_reportada: cptLbl ?? rangeCpt,
+      comision_fuente: report.feeUsedSource,
+      costo_mensual_est: `$${formatMXN(report.currentTotal)} MXN`,
+      ahorro_mensual_est: `$${formatMXN(report.savingsMonthly)} MXN`,
+      ahorro_anual_est: `$${formatMXN(report.savingsAnnual)} MXN`,
+      score_evitable: `${report.score}%`,
     };
 
     try {
@@ -200,7 +268,7 @@ export function CotizadorQuiz() {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       events.formSubmit();
       events.adsLeadConversion();
-      setStep(4);
+      setStep(6);
     } catch {
       setNetworkError(
         'Hubo un error. Intenta de nuevo o escríbenos a paola@btiq.mx',
@@ -250,7 +318,7 @@ export function CotizadorQuiz() {
                   value={platform}
                   onChange={(e) => {
                     setPlatform(e.target.value as Platform);
-                    setDetected(false); // ya no es auto-detect si la cambia
+                    setDetected(false);
                   }}
                   className={inputClass(false)}
                 >
@@ -279,42 +347,46 @@ export function CotizadorQuiz() {
       )}
 
       {step === 2 && (
-        <Screen title="¿Cuánto vendes al mes?">
-          <p className="mt-3 text-body-l text-texto-2">
-            Un rango es suficiente. Usamos el punto medio para el cálculo.
-          </p>
-          <div className="mt-8 flex flex-col gap-2.5">
-            {SALES_RANGES.map((r) => (
-              <button
-                key={r.value}
-                type="button"
-                onClick={() => setRange(r.value)}
-                className={`rounded-[12px] border px-5 py-4 text-left font-display text-[15px] transition-all duration-200 ${
-                  range === r.value
-                    ? 'border-brand bg-surface-2 text-texto-1'
-                    : 'border-borde bg-surface-1 text-texto-2 hover:border-texto-4 hover:text-texto-1'
-                }`}
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
-          <div className="mt-8 flex justify-between">
-            <SecondaryButton onClick={() => setStep(1)}>← Atrás</SecondaryButton>
-            <PrimaryButton
-              onClick={() => range && setStep(3)}
-              disabled={!range}
-            >
-              Continuar →
-            </PrimaryButton>
-          </div>
-        </Screen>
+        <RangeScreen
+          title="¿Cuánto vendes al mes?"
+          hint="Un rango es suficiente. Usamos el punto medio para el cálculo."
+          options={SALES_RANGES.map((r) => ({ value: r.value, label: r.label }))}
+          value={rangeSales}
+          onChange={setRangeSales}
+          onBack={() => setStep(1)}
+          onNext={() => setStep(3)}
+        />
       )}
 
       {step === 3 && (
-        <Screen title="Tus datos para enviarte el diagnóstico">
+        <RangeScreen
+          title="¿Cuánto cuesta en promedio cada envío?"
+          hint="El costo por pedido — lo que le pagas a la paquetería (DHL, Estafeta, etc.)."
+          options={SHIPPING_RANGES.map((r) => ({ value: r.value, label: r.label }))}
+          value={rangeShipping}
+          onChange={setRangeShipping}
+          onBack={() => setStep(2)}
+          onNext={() => setStep(4)}
+        />
+      )}
+
+      {step === 4 && (
+        <RangeScreen
+          title="¿Qué comisión total pagas por cada venta?"
+          hint="Suma comisión de plataforma + gateway + apps. Si no sabes, selecciona la última opción."
+          options={CPT_RANGES.map((r) => ({ value: r.value, label: r.label }))}
+          value={rangeCpt}
+          onChange={setRangeCpt}
+          onBack={() => setStep(3)}
+          onNext={() => setStep(5)}
+        />
+      )}
+
+      {step === 5 && (
+        <Screen title="Ver mi reporte">
           <p className="mt-3 text-body-l text-texto-2">
-            Te lo compartimos por email en menos de 24 horas.
+            Te lo mostramos en pantalla al momento. También lo guardamos y te
+            escribimos para ayudarte a ejecutar lo que veas.
           </p>
           <form onSubmit={handleFinalSubmit} noValidate className="mt-8 space-y-4">
             <QuizField label="Nombre" error={nombreErr}>
@@ -358,90 +430,26 @@ export function CotizadorQuiz() {
             )}
 
             <div className="flex justify-between pt-2">
-              <SecondaryButton
-                onClick={() => setStep(2)}
-                type="button"
-              >
+              <SecondaryButton onClick={() => setStep(4)} type="button">
                 ← Atrás
               </SecondaryButton>
               <PrimaryButton loading={submitting} type="submit">
-                {submitting ? 'Calculando…' : 'Ver mi ahorro →'}
+                {submitting ? 'Calculando…' : 'Ver mi reporte →'}
               </PrimaryButton>
             </div>
           </form>
         </Screen>
       )}
 
-      {step === 4 && savings && (
-        <div className="rounded-[14px] border border-borde bg-surface-1 p-[clamp(28px,4vw,44px)]">
-          <div className="mono-label">Diagnóstico · {PLATFORM_LABELS[platform as Platform]}</div>
-
-          <h2
-            className="mt-4 font-display font-bold text-texto-1"
-            style={{
-              fontSize: 'clamp(2rem, 5vw, 3.4rem)',
-              lineHeight: 1,
-              letterSpacing: '-0.03em',
-            }}
-          >
-            Estás perdiendo{' '}
-            <span
-              className="text-brand"
-              style={{
-                background:
-                  'linear-gradient(180deg, transparent 65%, rgba(237,224,74,0.18) 65%)',
-              }}
-            >
-              ${formatMXN(savings.monthlySavings)} MXN
-            </span>{' '}
-            al mes.
-          </h2>
-          <p className="mt-4 text-body-l text-texto-2">
-            Con la plataforma correcta y menos apps externas, ese gasto se
-            puede eliminar casi por completo.
-          </p>
-
-          {/* Breakdown honesto */}
-          <div className="mt-8 grid grid-cols-1 gap-px overflow-hidden rounded-[12px] border border-borde bg-borde">
-            <BreakdownRow
-              label="Comisión de plataforma [est.]"
-              value={`$${formatMXN(savings.currentFee)}`}
-              severity="high"
-            />
-            <BreakdownRow
-              label="Apps + integraciones [est.]"
-              value={`$${formatMXN(savings.currentApps)}`}
-              severity="mid"
-            />
-            <BreakdownRow
-              label="Ahorro anual proyectado"
-              value={`+$${formatMXN(savings.annualSavings)}`}
-              severity="win"
-              highlight
-            />
-          </div>
-
-          <div className="mt-8">
-            <a
-              href={`https://wa.me/525537344652?text=${encodeURIComponent(
-                `Hola Paola, hice el cotizador. Estoy en ${PLATFORM_LABELS[platform as Platform]} vendiendo ${SALES_RANGES.find((r) => r.value === range)?.label}. Me da un ahorro estimado de $${formatMXN(savings.monthlySavings)}/mes. Quiero agendar la llamada.`,
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => events.whatsappClick('thankyou')}
-              className="inline-flex w-full items-center justify-center gap-2.5 rounded-[6px] bg-brand px-[22px] py-4 font-mono text-[12px] uppercase tracking-[0.08em] text-base transition-all ease-brand duration-[220ms] hover:-translate-y-0.5 hover:shadow-brand-hover"
-            >
-              Agenda una llamada gratis <span aria-hidden="true">→</span>
-            </a>
-            <p
-              className="mt-3 text-center font-mono text-[10.5px] text-texto-4"
-              style={{ letterSpacing: '0.05em' }}
-            >
-              Sin tarjeta, sin compromiso. Diagnóstico completo en 24h a{' '}
-              {email}.
-            </p>
-          </div>
-        </div>
+      {step === 6 && report && (
+        <LiveReport
+          nombre={nombre.trim().split(' ')[0] ?? ''}
+          platform={platform as Platform}
+          report={report}
+          rangeSalesLabel={
+            SALES_RANGES.find((r) => r.value === rangeSales)?.label ?? ''
+          }
+        />
       )}
     </div>
   );
@@ -450,20 +458,20 @@ export function CotizadorQuiz() {
 // ─── Building blocks ────────────────────────────────────
 
 function ProgressBar({ step }: { step: Step }) {
-  const total = 3;
+  const total = 5;
   const cur = Math.min(step, total);
   const pct = (cur / total) * 100;
   return (
     <div className="mb-10">
       <div className="mb-2 flex justify-between font-mono text-[10.5px] uppercase tracking-[0.08em] text-texto-3">
         <span>Paso {cur} de {total}</span>
-        <span>{step === 4 ? 'Diagnóstico listo' : `${Math.round(pct)}%`}</span>
+        <span>{step === 6 ? 'Reporte listo' : `${Math.round(pct)}%`}</span>
       </div>
       <div className="relative h-[3px] w-full overflow-hidden rounded-full bg-borde">
         <div
           className="h-full bg-brand transition-all duration-500 ease-brand"
           style={{
-            width: step === 4 ? '100%' : `${pct}%`,
+            width: step === 6 ? '100%' : `${pct}%`,
             boxShadow:
               '0 0 12px color-mix(in oklab, var(--brand) 40%, transparent)',
           }}
@@ -473,13 +481,7 @@ function ProgressBar({ step }: { step: Step }) {
   );
 }
 
-function Screen({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Screen({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-[14px] border border-borde bg-surface-1 p-[clamp(28px,4vw,44px)]">
       <h2
@@ -494,6 +496,52 @@ function Screen({
       </h2>
       {children}
     </div>
+  );
+}
+
+function RangeScreen({
+  title,
+  hint,
+  options,
+  value,
+  onChange,
+  onBack,
+  onNext,
+}: {
+  title: string;
+  hint: string;
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+  onBack: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <Screen title={title}>
+      <p className="mt-3 text-body-l text-texto-2">{hint}</p>
+      <div className="mt-8 flex flex-col gap-2.5">
+        {options.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => onChange(o.value)}
+            className={`rounded-[12px] border px-5 py-4 text-left font-display text-[15px] transition-all duration-200 ${
+              value === o.value
+                ? 'border-brand bg-surface-2 text-texto-1'
+                : 'border-borde bg-surface-1 text-texto-2 hover:border-texto-4 hover:text-texto-1'
+            }`}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+      <div className="mt-8 flex justify-between">
+        <SecondaryButton onClick={onBack}>← Atrás</SecondaryButton>
+        <PrimaryButton onClick={onNext} disabled={!value}>
+          Continuar →
+        </PrimaryButton>
+      </div>
+    </Screen>
   );
 }
 
@@ -580,50 +628,228 @@ function SecondaryButton({
   );
 }
 
-function BreakdownRow({
+// ─── Live report ────────────────────────────────────────
+
+type ReportData = {
+  gmv: number;
+  orders: number;
+  effectiveFeePct: number;
+  feeUsedSource: 'reported' | 'default';
+  currentFee: number;
+  currentApps: number;
+  currentShipping: number;
+  currentTotal: number;
+  baselineTotal: number;
+  savingsFee: number;
+  savingsApps: number;
+  savingsShipping: number;
+  savingsMonthly: number;
+  savingsAnnual: number;
+  score: number;
+};
+
+function LiveReport({
+  nombre,
+  platform,
+  report,
+  rangeSalesLabel,
+}: {
+  nombre: string;
+  platform: Platform;
+  report: ReportData;
+  rangeSalesLabel: string;
+}) {
+  const maxCost = Math.max(
+    report.currentFee,
+    report.currentApps,
+    report.currentShipping,
+    1,
+  );
+
+  return (
+    <div className="rounded-[14px] border border-borde bg-surface-1 p-[clamp(28px,4vw,44px)]">
+      {/* Header del reporte */}
+      <div className="mono-label">
+        Reporte de {nombre} · {PLATFORM_LABELS[platform]} · {rangeSalesLabel}
+      </div>
+
+      <h2
+        className="mt-4 font-display font-bold text-texto-1"
+        style={{
+          fontSize: 'clamp(2rem, 5vw, 3.4rem)',
+          lineHeight: 1,
+          letterSpacing: '-0.03em',
+        }}
+      >
+        Estás perdiendo{' '}
+        <span
+          className="text-brand"
+          style={{
+            background:
+              'linear-gradient(180deg, transparent 65%, rgba(237,224,74,0.18) 65%)',
+          }}
+        >
+          ${formatMXN(report.savingsMonthly)} MXN
+        </span>{' '}
+        al mes.
+      </h2>
+      <p className="mt-3 text-body-l text-texto-2">
+        Score de gasto evitable: <b className="text-texto-1">{report.score}%</b>{' '}
+        · {report.orders.toLocaleString('es-MX')} pedidos/mes estimados.
+      </p>
+
+      {/* Barras horizontales por rubro */}
+      <div className="mt-8 space-y-4">
+        <CostBar
+          label="Comisión por venta"
+          value={report.currentFee}
+          max={maxCost}
+          note={
+            report.feeUsedSource === 'reported'
+              ? `${(report.effectiveFeePct * 100).toFixed(1)}% reportado`
+              : `${(report.effectiveFeePct * 100).toFixed(1)}% default plataforma`
+          }
+          severity="high"
+        />
+        <CostBar
+          label="Apps + integraciones"
+          value={report.currentApps}
+          max={maxCost}
+          note={`${PLATFORM_LABELS[platform]} promedio`}
+          severity="mid"
+        />
+        <CostBar
+          label="Envíos"
+          value={report.currentShipping}
+          max={maxCost}
+          note={`${report.orders.toLocaleString('es-MX')} pedidos × costo`}
+          severity="mid"
+        />
+      </div>
+
+      {/* Totales */}
+      <div className="mt-8 grid grid-cols-1 gap-px overflow-hidden rounded-[12px] border border-borde bg-borde md:grid-cols-3">
+        <TotalCell
+          label="Gasto operativo actual"
+          value={`$${formatMXN(report.currentTotal)}`}
+          sub="por mes [est.]"
+        />
+        <TotalCell
+          label="Ahorro mensual proyectado"
+          value={`+$${formatMXN(report.savingsMonthly)}`}
+          sub="con la plataforma correcta"
+          highlight
+        />
+        <TotalCell
+          label="Ahorro anual"
+          value={`+$${formatMXN(report.savingsAnnual)}`}
+          sub="12 × ahorro mensual"
+        />
+      </div>
+
+      {/* CTA */}
+      <div className="mt-8">
+        <a
+          href={`https://wa.me/525537344652?text=${encodeURIComponent(
+            `Hola Paola, hice el cotizador. Estoy en ${PLATFORM_LABELS[platform]} vendiendo ${rangeSalesLabel}. El reporte me da un ahorro estimado de $${formatMXN(report.savingsMonthly)}/mes (${report.score}% evitable). Quiero agendar la llamada.`,
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => events.whatsappClick('thankyou')}
+          className="inline-flex w-full items-center justify-center gap-2.5 rounded-[6px] bg-brand px-[22px] py-4 font-mono text-[12px] uppercase tracking-[0.08em] text-base transition-all ease-brand duration-[220ms] hover:-translate-y-0.5 hover:shadow-brand-hover"
+        >
+          Quiero ahorrar esto — agenda una llamada <span aria-hidden="true">→</span>
+        </a>
+        <p
+          className="mt-3 text-center font-mono text-[10.5px] text-texto-4"
+          style={{ letterSpacing: '0.05em' }}
+        >
+          Sin tarjeta, sin compromiso. Reporte generado con datos que
+          reportaste — cifras estimadas.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function CostBar({
   label,
   value,
+  max,
+  note,
   severity,
-  highlight,
 }: {
   label: string;
-  value: string;
-  severity: 'high' | 'mid' | 'win';
-  highlight?: boolean;
+  value: number;
+  max: number;
+  note: string;
+  severity: 'high' | 'mid' | 'low';
 }) {
-  const dotColor =
-    severity === 'high'
-      ? '#c14a4a'
-      : severity === 'mid'
-        ? '#d6b45a'
-        : 'var(--brand)';
+  const pct = Math.min(100, (value / max) * 100);
+  const color =
+    severity === 'high' ? '#c14a4a' : severity === 'mid' ? '#d6b45a' : 'var(--brand)';
   return (
-    <div
-      className={`flex items-center justify-between gap-4 bg-surface-1 px-5 py-4 ${
-        highlight ? 'bg-surface-2' : ''
-      }`}
-    >
-      <div className="flex items-center gap-3">
-        <span
-          aria-hidden="true"
-          className="block h-[9px] w-[9px] rounded-full"
-          style={{ background: dotColor }}
-        />
+    <div>
+      <div className="mb-1.5 flex items-baseline justify-between">
         <span
           className="font-mono text-[10.5px] uppercase text-texto-3"
           style={{ letterSpacing: '0.07em' }}
         >
           {label}
         </span>
+        <span
+          className="font-display font-bold text-texto-1"
+          style={{ fontSize: '1rem' }}
+        >
+          ${formatMXN(value)}
+        </span>
       </div>
-      <span
-        className={`font-display font-bold ${
-          severity === 'win' ? 'text-brand' : 'text-texto-1'
+      <div className="relative h-[6px] w-full overflow-hidden rounded-full bg-borde">
+        <div
+          className="h-full transition-all duration-700 ease-brand"
+          style={{ width: `${pct}%`, background: color }}
+        />
+      </div>
+      <div
+        className="mt-1 font-mono text-[10px] text-texto-4"
+        style={{ letterSpacing: '0.04em' }}
+      >
+        {note}
+      </div>
+    </div>
+  );
+}
+
+function TotalCell({
+  label,
+  value,
+  sub,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={`bg-surface-1 p-5 ${highlight ? 'bg-surface-2' : ''}`}
+    >
+      <div
+        className="mono-label"
+        style={{ color: highlight ? 'var(--brand)' : 'var(--texto-3)' }}
+      >
+        {label}
+      </div>
+      <div
+        className={`mt-2 font-display font-bold ${
+          highlight ? 'text-brand' : 'text-texto-1'
         }`}
-        style={{ fontSize: '1.125rem', letterSpacing: '-0.02em' }}
+        style={{ fontSize: 'clamp(1.5rem, 3vw, 2rem)', letterSpacing: '-0.03em' }}
       >
         {value}
-      </span>
+      </div>
+      <div className="mt-1 text-[12px] text-texto-2">{sub}</div>
     </div>
   );
 }
