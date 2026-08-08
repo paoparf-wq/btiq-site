@@ -4,10 +4,9 @@ import { Footer } from '@/components/brand/Footer';
 import { CotizadorQuiz } from './CotizadorQuiz';
 import { ReportPreview } from './ReportPreview';
 
-// /cotizador — landing de campaña con quiz interactivo de 5 pasos que
-// entrega el reporte EN PANTALLA al instante (no promesa de 24h).
-// Bajo el quiz mostramos un mockup del reporte para dar dinamismo y
-// preview de lo que se recibe.
+// /cotizador — quiz 6 pasos con reporte LIVE en pantalla.
+// Layout compacto: hero corto, quiz, muestra del reporte pegada abajo para
+// que la gente entienda "esto es lo que voy a recibir" antes de terminar.
 
 export default function CotizadorPage() {
   return (
@@ -26,8 +25,7 @@ export default function CotizadorPage() {
         </div>
       </header>
 
-      <main className="relative flex-1 overflow-hidden py-[clamp(48px,8vw,110px)]">
-        {/* Glow radial sutil */}
+      <main className="relative flex-1 overflow-hidden py-[clamp(32px,5vw,64px)]">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute h-[120%]"
@@ -38,37 +36,32 @@ export default function CotizadorPage() {
           }}
         />
 
-        <div className="relative mx-auto max-w-[720px] px-gut">
-          <div className="mb-[clamp(28px,4vw,48px)] text-center">
+        <div className="relative mx-auto max-w-[700px] px-gut">
+          <div className="mb-8 text-center">
             <div className="mono-label">Diagnóstico de tienda online</div>
             <h1
-              className="mt-4 font-display font-bold text-texto-1"
+              className="mt-3 font-display font-bold text-texto-1"
               style={{
-                fontSize: 'clamp(2.4rem, 5.4vw, 4.2rem)',
-                lineHeight: 0.98,
-                letterSpacing: '-0.03em',
+                fontSize: 'clamp(2rem, 4.6vw, 3.4rem)',
+                lineHeight: 1.02,
+                letterSpacing: '-0.025em',
               }}
             >
-              Cuánto puedes ahorrar en gastos de tu tienda.
+              ¿Cuánto puedes ahorrar en tu tienda?
             </h1>
             <p
-              className="mx-auto mt-5 max-w-[52ch] text-texto-2"
-              style={{
-                fontSize: 'clamp(1rem, 1.35vw, 1.1875rem)',
-                lineHeight: 1.58,
-              }}
+              className="mx-auto mt-3 max-w-[50ch] text-body-l text-texto-2"
             >
-              5 preguntas rápidas. Te mostramos el reporte en pantalla al
-              instante — con desglose de comisiones, apps y envíos.
+              6 preguntas y te decimos, al momento, cuánto estás pagando de
+              más en comisiones, apps y envíos.
             </p>
           </div>
 
           <CotizadorQuiz />
-        </div>
 
-        {/* Preview del reporte — solo cuando ya hicieron scroll */}
-        <div className="relative mx-auto mt-[clamp(64px,10vw,140px)] max-w-site px-gut">
-          <div className="border-t border-borde pt-[clamp(48px,7vw,80px)]">
+          {/* Muestra del reporte — pegada al quiz, sin border-top que
+              divida (queremos que se sienta parte del mismo bloque). */}
+          <div className="mt-10">
             <ReportPreview />
           </div>
         </div>

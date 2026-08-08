@@ -1,99 +1,72 @@
-// Mockup visual del reporte, para mostrar bajo el quiz qué se recibe.
-// Todo es HTML/CSS estilizado (no imágenes) — mismo lenguaje visual que el
-// reporte real que aparece al terminar el quiz. Da dinamismo a la página
-// sin cargar assets extra.
+// Muestra visual del reporte, para que se vea lo que se va a recibir.
+// Copy simple, sin jerga. 3 tarjetas compactas.
 
 export function ReportPreview() {
   return (
     <div>
-      <div className="mb-8 text-center">
-        <div className="mono-label">Muestra del reporte</div>
-        <h3
-          className="mt-3 font-display font-bold text-texto-1"
-          style={{
-            fontSize: 'clamp(1.5rem, 3.4vw, 2.2rem)',
-            lineHeight: 1.05,
-            letterSpacing: '-0.025em',
-          }}
-        >
-          Esto es lo que ves al terminar.
-        </h3>
+      <div className="mb-5 text-center">
+        <div className="mono-label">Así se ve tu reporte</div>
         <p
-          className="mx-auto mt-3 max-w-[48ch] text-texto-2"
-          style={{ fontSize: '0.9375rem', lineHeight: 1.55 }}
+          className="mx-auto mt-2 max-w-[46ch] text-texto-2"
+          style={{ fontSize: '14.5px', lineHeight: 1.5 }}
         >
-          Sin esperas ni promesas de 24 horas — tu ahorro estimado en
-          pantalla, al instante.
+          Al terminar las preguntas ves esto en pantalla, sin esperar.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {/* Card 1 — Score */}
-        <MockCard label="01 · Score de ahorro">
-          <div className="flex items-baseline gap-3">
-            <div
-              className="font-display font-bold text-brand"
-              style={{ fontSize: '3.4rem', lineHeight: 1, letterSpacing: '-0.04em' }}
-            >
-              62%
-            </div>
-            <div
-              className="font-mono text-[10px] uppercase text-texto-3"
-              style={{ letterSpacing: '0.07em' }}
-            >
-              de tu gasto<br />es evitable
-            </div>
-          </div>
-          <div className="mt-4 h-[6px] w-full overflow-hidden rounded-full bg-borde">
-            <div
-              className="h-full bg-brand"
-              style={{
-                width: '62%',
-                boxShadow: '0 0 10px color-mix(in oklab, var(--brand) 40%, transparent)',
-              }}
-            />
-          </div>
-        </MockCard>
-
-        {/* Card 2 — Breakdown */}
-        <MockCard label="02 · Dónde se va tu dinero">
-          <div className="space-y-2.5">
-            <MockBar label="Comisión" pct={82} color="#c14a4a" amount="$6,500" />
-            <MockBar label="Apps" pct={54} color="#d6b45a" amount="$1,200" />
-            <MockBar label="Envíos" pct={40} color="#d6b45a" amount="$3,200" />
-          </div>
-        </MockCard>
-
-        {/* Card 3 — Ahorro */}
-        <MockCard label="03 · Ahorro proyectado">
-          <div className="font-mono text-[9.5px] uppercase text-texto-3" style={{ letterSpacing: '0.07em' }}>
-            Mensual
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <MockCard label="Ahorro al mes">
+          <div
+            className="font-display font-bold text-brand"
+            style={{
+              fontSize: '2.6rem',
+              lineHeight: 1,
+              letterSpacing: '-0.03em',
+            }}
+          >
+            $7,700
           </div>
           <div
-            className="mt-1 font-display font-bold text-brand"
-            style={{ fontSize: '2.2rem', lineHeight: 1, letterSpacing: '-0.03em' }}
+            className="mt-1 font-display text-texto-2"
+            style={{ fontSize: '13px' }}
           >
-            +$7,700
+            que hoy se te van
           </div>
-          <div className="mt-4 border-t border-borde pt-4">
-            <div className="font-mono text-[9.5px] uppercase text-texto-3" style={{ letterSpacing: '0.07em' }}>
-              Anual
-            </div>
-            <div
-              className="mt-1 font-display font-bold text-texto-1"
-              style={{ fontSize: '1.6rem', lineHeight: 1, letterSpacing: '-0.02em' }}
-            >
-              +$92,400
-            </div>
+        </MockCard>
+
+        <MockCard label="Ahorro al año">
+          <div
+            className="font-display font-bold text-texto-1"
+            style={{
+              fontSize: '2.2rem',
+              lineHeight: 1,
+              letterSpacing: '-0.03em',
+            }}
+          >
+            $92,400
+          </div>
+          <div
+            className="mt-1 font-display text-texto-2"
+            style={{ fontSize: '13px' }}
+          >
+            proyectado en 12 meses
+          </div>
+        </MockCard>
+
+        <MockCard label="De dónde">
+          <div className="space-y-2">
+            <MockBar label="Comisiones" pct={82} color="#c14a4a" />
+            <MockBar label="Apps" pct={54} color="#d6b45a" />
+            <MockBar label="Envíos" pct={40} color="#d6b45a" />
           </div>
         </MockCard>
       </div>
 
       <p
-        className="mt-6 text-center font-mono text-[10px] text-texto-4"
-        style={{ letterSpacing: '0.05em' }}
+        className="mt-4 text-center font-mono text-[10px] text-texto-4"
+        style={{ letterSpacing: '0.04em' }}
       >
-        Cifras del ejemplo — tu reporte usa los datos que reportes.
+        Ejemplo — tus números salen de lo que contestes en las 6 preguntas.
       </p>
     </div>
   );
@@ -107,8 +80,13 @@ function MockCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-[14px] border border-borde bg-surface-1 p-5">
-      <div className="mono-label mb-4">{label}</div>
+    <div className="rounded-[12px] border border-borde bg-surface-1 p-4">
+      <div
+        className="mb-3 font-mono uppercase text-texto-3"
+        style={{ fontSize: '10.5px', letterSpacing: '0.08em' }}
+      >
+        {label}
+      </div>
       {children}
     </div>
   );
@@ -118,30 +96,20 @@ function MockBar({
   label,
   pct,
   color,
-  amount,
 }: {
   label: string;
   pct: number;
   color: string;
-  amount: string;
 }) {
   return (
     <div>
-      <div className="mb-1 flex items-baseline justify-between">
-        <span
-          className="font-mono text-[9.5px] uppercase text-texto-3"
-          style={{ letterSpacing: '0.07em' }}
-        >
-          {label}
-        </span>
-        <span
-          className="font-display font-bold text-texto-1"
-          style={{ fontSize: '0.8125rem' }}
-        >
-          {amount}
-        </span>
+      <div
+        className="mb-1 font-display text-texto-2"
+        style={{ fontSize: '12px' }}
+      >
+        {label}
       </div>
-      <div className="h-[5px] w-full overflow-hidden rounded-full bg-borde">
+      <div className="h-[6px] w-full overflow-hidden rounded-full bg-borde">
         <div
           className="h-full"
           style={{ width: `${pct}%`, background: color }}
