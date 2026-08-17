@@ -757,6 +757,11 @@ type ReportData = {
   isAlreadyOptimal: boolean;
 };
 
+// Umbral mínimo para considerar el ahorro como "significativo".
+// Por debajo, mostramos la variante "operación ajustada" en vez de un
+// número chico o cero que confunda.
+const AHORRO_MIN = 3000;
+
 function LiveReport({
   nombre,
   platform,
@@ -768,74 +773,80 @@ function LiveReport({
   report: ReportData;
   rangeOrdersLabel: string;
 }) {
-  if (report.isAlreadyOptimal) {
+  const yaTiendanube = report.isAlreadyOptimal;
+  const ahorroChico = report.ahorroMes < AHORRO_MIN;
+
+  // Case 1: Ya está en Tiendanube — enfoque en crecer
+  if (yaTiendanube) {
     return (
-      <div className="rounded-[14px] border border-brand/40 bg-surface-1 p-[clamp(22px,3vw,36px)]">
-        <div className="mono-label" style={{ color: 'var(--brand)' }}>
-          Reporte de {nombre} · {PLATFORM_LABELS[platform]}
-        </div>
-        <h2
-          className="mt-3 font-display font-bold text-texto-1"
-          style={{
-            fontSize: 'clamp(1.75rem, 4.4vw, 2.8rem)',
-            lineHeight: 1.02,
-            letterSpacing: '-0.025em',
-          }}
-        >
-          Buenas noticias —{' '}
-          <span
-            className="text-brand"
-            style={{
-              background:
-                'linear-gradient(180deg, transparent 65%, rgba(237,224,74,0.20) 65%)',
-            }}
-          >
-            ya estás en la plataforma correcta.
-          </span>
-        </h2>
-        <p className="mt-4 text-body-l text-texto-2">
-          Tu tienda ya está en Tiendanube, así que no hay comisiones altas ni
-          apps caras que ahorrar. Donde sí podemos ayudarte:
-        </p>
-        <ul className="mt-4 grid gap-2 md:grid-cols-2">
-          {[
-            'Más ventas con las mismas visitas',
-            'Bajar el costo de traer un cliente',
-            'Optimizar tus campañas de Google y Meta',
-            'Automatizar reportes y seguimiento',
-          ].map((item) => (
-            <li
-              key={item}
-              className="flex items-start gap-2.5 rounded-[10px] border border-borde bg-surface-1 px-4 py-3 text-[14px] text-texto-1"
+      <TightReport
+        nombre={nombre}
+        platform={platform}
+        headline={
+          <>
+            Buenas noticias —{' '}
+            <span
+              className="text-brand"
+              style={{
+                background:
+                  'linear-gradient(180deg, transparent 65%, rgba(237,224,74,0.20) 65%)',
+              }}
             >
-              <span
-                aria-hidden="true"
-                className="mt-1 block h-[7px] w-[7px] flex-none rounded-full bg-brand"
-              />
-              {item}
-            </li>
-          ))}
-        </ul>
-        <div className="mt-7">
-          <a
-            href={`https://wa.me/525537344652?text=${encodeURIComponent(
-              `Hola Paola, hice el cotizador. Ya estoy en Tiendanube con ${rangeOrdersLabel} al mes. Quiero ver cómo pueden ayudarme a crecer.`,
-            )}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => events.whatsappClick('thankyou')}
-            className="inline-flex w-full items-center justify-center gap-2.5 rounded-[6px] bg-brand px-[22px] py-4 font-mono text-[12px] uppercase tracking-[0.08em] text-base transition-all ease-brand duration-[220ms] hover:-translate-y-0.5 hover:shadow-brand-hover"
-          >
-            Agenda una llamada gratis <span aria-hidden="true">→</span>
-          </a>
-        </div>
-      </div>
+              ya estás en la plataforma correcta.
+            </span>
+          </>
+        }
+        subline="Tu tienda ya está en Tiendanube, así que no hay comisiones altas ni apps caras que ahorrar. Donde sí podemos ayudarte a mover la aguja:"
+        teasers={[
+          'Playbook para subir tu conversión',
+          'Cómo bajar el costo de traer un cliente',
+          'Optimización de tus campañas de Google y Meta',
+          'Reportes automáticos y seguimiento',
+        ]}
+        ctaLabel="Agenda una llamada gratis"
+        waMessage={`Hola Paola, hice el cotizador. Ya estoy en Tiendanube con ${rangeOrdersLabel} al mes. Quiero ver cómo pueden ayudarme a crecer.`}
+      />
     );
   }
 
+  // Case 2: Su operación ya está bastante ajustada (ahorro chico)
+  if (ahorroChico) {
+    return (
+      <TightReport
+        nombre={nombre}
+        platform={platform}
+        headline={
+          <>
+            Tu operación{' '}
+            <span
+              className="text-brand"
+              style={{
+                background:
+                  'linear-gradient(180deg, transparent 65%, rgba(237,224,74,0.20) 65%)',
+              }}
+            >
+              ya está bien ajustada
+            </span>
+            .
+          </>
+        }
+        subline="Con lo que nos compartiste, tus costos fijos y comisiones están cerca del mínimo. El siguiente salto no está en recortar — está en crecer:"
+        teasers={[
+          'Cómo subir la conversión de tu tienda',
+          'Estrategia para bajar el CAC en Meta y Google',
+          'Automatizar recompra y retención',
+          'Plan de escalamiento a 90 días',
+        ]}
+        ctaLabel="Quiero crecer — agenda una llamada"
+        waMessage={`Hola Paola, hice el cotizador. Estoy en ${PLATFORM_LABELS[platform]} con ${rangeOrdersLabel} al mes. Mi operación ya está ajustada — quiero ver cómo crecer.`}
+      />
+    );
+  }
+
+  // Case 3 (mayoritario): hay ahorro significativo
   return (
     <div className="space-y-4">
-      {/* Card principal */}
+      {/* Card protagonista — solo el número */}
       <div className="rounded-[14px] border border-brand/40 bg-surface-1 p-[clamp(22px,3vw,36px)]">
         <div className="mono-label">
           Reporte de {nombre} · {PLATFORM_LABELS[platform]}
@@ -848,7 +859,7 @@ function LiveReport({
             letterSpacing: '-0.02em',
           }}
         >
-          Puedes ahorrar
+          Puedes ahorrar hasta
         </h2>
         <div
           className="mt-1 font-display font-bold text-brand"
@@ -874,69 +885,50 @@ function LiveReport({
           </span>
         </div>
         <p className="mt-3 text-body-l text-texto-2">
-          Y{' '}
+          Y hasta{' '}
           <b className="text-texto-1">
             ${formatMXN(report.ahorroAnio)}
           </b>{' '}
           al año. Es dinero que hoy pagas en plan, comisiones, apps y envíos
-          que se pueden reducir.
+          que se pueden bajar.
         </p>
       </div>
 
-      {/* Card 2 — desglose */}
+      {/* Card 2 — teaser blureado del desglose */}
       <div className="rounded-[14px] border border-borde bg-surface-1 p-[clamp(22px,3vw,32px)]">
-        <div className="mono-label">De dónde sale ese ahorro (al mes)</div>
-        <div className="mt-4 space-y-3.5">
-          {report.hoyPlan > 0 && (
-            <CostRow
-              label="Plan que pagas a tu plataforma"
-              amount={report.hoyPlan}
-              note="Al mes, sin importar cuánto vendas"
-              severity="high"
-            />
-          )}
-          <CostRow
-            label="Comisiones por cada venta"
-            amount={report.hoyPas + report.hoyCpt}
-            note={
-              report.feeUsedSource === 'reported'
-                ? `${report.cptReportedPct.toFixed(1)}% de tus ventas`
-                : `Aproximado para ${PLATFORM_LABELS[platform]}`
-            }
-            severity="high"
-          />
-          {report.hoyOtras > 0 && (
-            <CostRow
-              label="Apps y herramientas extras"
-              amount={report.hoyOtras}
-              note={`Al mes, promedio para ${PLATFORM_LABELS[platform]}`}
-              severity="mid"
-            />
-          )}
-          <CostRow
-            label={`Envíos de tus ~${report.orders.toLocaleString('es-MX')} pedidos`}
-            amount={report.hoyEnvio}
-            note="Se puede negociar más barato por volumen"
-            severity="mid"
-          />
-        </div>
-
-        <div className="mt-6 border-t border-borde pt-5">
-          <div className="flex items-baseline justify-between">
-            <span
-              className="font-display font-medium text-texto-2"
-              style={{ fontSize: '15px' }}
+        <div className="mono-label">Cómo recuperar ese dinero</div>
+        <p
+          className="mt-2.5 text-texto-2"
+          style={{ fontSize: '14.5px', lineHeight: 1.55 }}
+        >
+          Con los datos que compartiste ya identificamos las fugas específicas
+          de tu operación. Te compartimos el paso a paso por WhatsApp — cuánto
+          bajar en cada rubro y en qué orden.
+        </p>
+        <ul className="mt-5 space-y-2.5">
+          {[
+            'El % exacto que estás pagando de más en comisiones',
+            'Qué apps puedes eliminar sin perder función',
+            'Cuánto negociar con tu paquetería por tu volumen',
+            'Plan de migración sin bajar ventas mientras cambias',
+          ].map((item) => (
+            <li
+              key={item}
+              className="flex items-start gap-3 border-b border-borde pb-2.5 last:border-b-0 last:pb-0"
             >
-              Total que pagas hoy
-            </span>
-            <span
-              className="font-display font-bold text-texto-1"
-              style={{ fontSize: '20px', letterSpacing: '-0.02em' }}
-            >
-              ${formatMXN(report.hoyMes)} / mes
-            </span>
-          </div>
-        </div>
+              <span
+                aria-hidden="true"
+                className="mt-1.5 block h-[6px] w-[6px] flex-none rounded-full bg-brand"
+              />
+              <span
+                className="flex-1 font-display text-texto-1"
+                style={{ fontSize: '14.5px', lineHeight: 1.45 }}
+              >
+                {item}
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
 
       {/* CTA */}
@@ -949,19 +941,25 @@ function LiveReport({
             letterSpacing: '-0.01em',
           }}
         >
-          ¿Quieres que te ayudemos a recuperar esos $
-          {formatMXN(report.ahorroMes)} al mes?
+          Recibe el desglose completo por WhatsApp
+        </p>
+        <p
+          className="mt-2 text-texto-2"
+          style={{ fontSize: '13.5px', lineHeight: 1.5 }}
+        >
+          Los números exactos por rubro, y una llamada de 30 min para
+          revisar cómo aplicarlo.
         </p>
         <a
           href={`https://wa.me/525537344652?text=${encodeURIComponent(
-            `Hola Paola, hice el cotizador. Estoy en ${PLATFORM_LABELS[platform]} con ${rangeOrdersLabel} al mes. El reporte me da un ahorro de $${formatMXN(report.ahorroMes)}/mes. Quiero agendar la llamada.`,
+            `Hola Paola, hice el cotizador. Estoy en ${PLATFORM_LABELS[platform]} con ${rangeOrdersLabel} al mes. Me dice que puedo ahorrar hasta $${formatMXN(report.ahorroMes)}/mes. Quiero ver el desglose completo.`,
           )}`}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => events.whatsappClick('thankyou')}
           className="mt-4 inline-flex w-full items-center justify-center gap-2.5 rounded-[6px] bg-brand px-[22px] py-4 font-mono text-[12px] uppercase tracking-[0.08em] text-base transition-all ease-brand duration-[220ms] hover:-translate-y-0.5 hover:shadow-brand-hover"
         >
-          Sí, agenda una llamada gratis <span aria-hidden="true">→</span>
+          Sí, quiero mi desglose <span aria-hidden="true">→</span>
         </a>
         <p
           className="mt-3 font-mono text-[10.5px] text-texto-4"
@@ -975,46 +973,65 @@ function LiveReport({
   );
 }
 
-function CostRow({
-  label,
-  amount,
-  note,
-  severity,
+// Reporte compacto — usado cuando ya está en Tiendanube o cuando el ahorro
+// es chico. Un solo card con headline + bullets + CTA.
+function TightReport({
+  nombre,
+  platform,
+  headline,
+  subline,
+  teasers,
+  ctaLabel,
+  waMessage,
 }: {
-  label: string;
-  amount: number;
-  note: string;
-  severity: 'high' | 'mid' | 'low';
+  nombre: string;
+  platform: Platform;
+  headline: React.ReactNode;
+  subline: string;
+  teasers: string[];
+  ctaLabel: string;
+  waMessage: string;
 }) {
-  const color =
-    severity === 'high'
-      ? '#c14a4a'
-      : severity === 'mid'
-        ? '#d6b45a'
-        : 'var(--brand)';
   return (
-    <div className="flex items-start gap-3">
-      <span
-        aria-hidden="true"
-        className="mt-1.5 block h-[9px] w-[9px] flex-none rounded-full"
-        style={{ background: color }}
-      />
-      <div className="flex-1">
-        <div className="flex items-baseline justify-between gap-4">
-          <span
-            className="font-display font-medium text-texto-1"
-            style={{ fontSize: '14.5px' }}
+    <div className="rounded-[14px] border border-brand/40 bg-surface-1 p-[clamp(22px,3vw,36px)]">
+      <div className="mono-label" style={{ color: 'var(--brand)' }}>
+        Reporte de {nombre} · {PLATFORM_LABELS[platform]}
+      </div>
+      <h2
+        className="mt-3 font-display font-bold text-texto-1"
+        style={{
+          fontSize: 'clamp(1.75rem, 4.4vw, 2.8rem)',
+          lineHeight: 1.02,
+          letterSpacing: '-0.025em',
+        }}
+      >
+        {headline}
+      </h2>
+      <p className="mt-4 text-body-l text-texto-2">{subline}</p>
+      <ul className="mt-5 grid gap-2 md:grid-cols-2">
+        {teasers.map((item) => (
+          <li
+            key={item}
+            className="flex items-start gap-2.5 rounded-[10px] border border-borde bg-surface-1 px-4 py-3 text-[14px] text-texto-1"
           >
-            {label}
-          </span>
-          <span
-            className="whitespace-nowrap font-display font-bold text-texto-1"
-            style={{ fontSize: '15px', letterSpacing: '-0.01em' }}
-          >
-            ${formatMXN(amount)}
-          </span>
-        </div>
-        <div className="mt-0.5 text-[12.5px] text-texto-3">{note}</div>
+            <span
+              aria-hidden="true"
+              className="mt-1 block h-[7px] w-[7px] flex-none rounded-full bg-brand"
+            />
+            {item}
+          </li>
+        ))}
+      </ul>
+      <div className="mt-7">
+        <a
+          href={`https://wa.me/525537344652?text=${encodeURIComponent(waMessage)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => events.whatsappClick('thankyou')}
+          className="inline-flex w-full items-center justify-center gap-2.5 rounded-[6px] bg-brand px-[22px] py-4 font-mono text-[12px] uppercase tracking-[0.08em] text-base transition-all ease-brand duration-[220ms] hover:-translate-y-0.5 hover:shadow-brand-hover"
+        >
+          {ctaLabel} <span aria-hidden="true">→</span>
+        </a>
       </div>
     </div>
   );
