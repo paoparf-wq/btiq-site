@@ -131,7 +131,7 @@ const CPT_RANGES = [
   { value: 'c3', label: 'Entre 5% y 7%', pct: 6 },
   { value: 'c4', label: 'Entre 7% y 10%', pct: 8.5 },
   { value: 'c5', label: 'Más del 10%', pct: 12 },
-  { value: 'c0', label: 'No estoy segura', pct: -1 },
+  { value: 'c0', label: 'No estoy segur@', pct: -1 },
 ] as const;
 
 function formatMXN(n: number) {
