@@ -1,19 +1,30 @@
 'use client';
 
-// Cotizador — quiz de 6 pasos con lenguaje coloquial (sin jerga técnica)
-// y calculo honesto:
-//   1. URL de la tienda -> API detect-platform + confirmar
-//   2. Cuánto vendes al mes
-//   3. Ticket promedio (para saber cuántos pedidos son)
-//   4. Costo por envío
-//   5. % que pagas de comisiones
-//   6. Nombre + email + WhatsApp -> reporte LIVE
+// Cotizador — quiz de 6 pasos con lenguaje coloquial y fórmula oficial
+// del kit del Programa de Partners de Tiendanube.
 //
-// Fix Tiendanube: si el usuario reporta que ya usa Tiendanube, el reporte
-// no muestra "estás perdiendo" — muestra "ya estás en la plataforma
-// correcta" y ofrece ayudar con campañas.
+// Costos que se calculan (todo mensualizado -> anualizado ×12):
+//   plan   = plan mensual de la plataforma
+//   pas    = comisión pasarela % × GMV + cargo fijo × pedidos
+//   cpt    = comisión de la plataforma % × GMV (además del plan)
+//   log    = costo envío × pedidos
+//   otras  = apps y herramientas externas al mes
+//
+// Baseline Tiendanube: plan con descuento 25%, comisión Pago Nube 2.99% +
+// $3 fijo, envío $130 por pedido con Envío Nube, apps $0 (incluidas), cpt 0.
+//
+// Los rangos que el user elige son las 3 entradas de la fórmula:
+//   - GMV mensual (rango)
+//   - Ticket promedio -> deriva # pedidos
+//   - Costo envío por pedido (rango)
+//   - % comisión que reporta (o "no sé" -> default de la plataforma)
 
-import { useMemo, useState, type FormEvent } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type FormEvent,
+} from 'react';
 import { events } from '@/lib/analytics';
 
 const FORMSPREE_ENDPOINT = process.env.NEXT_PUBLIC_FORMSPREE_ENDPOINT;
@@ -30,6 +41,11 @@ type Platform =
   | 'tiendanube'
   | 'squarespace'
   | 'bigcommerce'
+  | 'prestashop'
+  | 'jumpseller'
+  | 'ecwid'
+  | 'salesforce'
+  | 'propia'
   | 'other';
 
 const PLATFORM_LABELS: Record<Platform, string> = {
@@ -37,28 +53,48 @@ const PLATFORM_LABELS: Record<Platform, string> = {
   woocommerce: 'WooCommerce',
   wix: 'Wix',
   vtex: 'VTEX',
-  magento: 'Magento',
+  magento: 'Magento / Adobe',
   squarespace: 'Squarespace',
   bigcommerce: 'BigCommerce',
+  prestashop: 'PrestaShop',
+  jumpseller: 'Jumpseller',
+  ecwid: 'Ecwid',
+  salesforce: 'Salesforce Commerce',
   tiendanube: 'Tiendanube',
-  other: 'Otra / tienda propia',
+  propia: 'Desarrollo propio',
+  other: 'Otra plataforma',
 };
 
-// Costos default por plataforma (para cuando el user dice "no lo sé").
-const PLATFORM_COSTS: Record<Platform, { fee: number; apps: number }> = {
-  shopify:     { fee: 0.020, apps: 1200 },
-  wix:         { fee: 0.025, apps: 700 },
-  vtex:        { fee: 0.020, apps: 2500 },
-  magento:     { fee: 0.000, apps: 3000 },
-  woocommerce: { fee: 0.000, apps: 900 },
-  squarespace: { fee: 0.030, apps: 500 },
-  bigcommerce: { fee: 0.015, apps: 900 },
-  other:       { fee: 0.015, apps: 600 },
-  tiendanube:  { fee: 0.000, apps: 400 },
+// Tarifas oficiales del kit del Programa de Partners MX. plan/otras en
+// MXN/mes; com y cpt en % del GMV; fijo en MXN por pedido; envio en MXN.
+type Rates = {
+  plan: number;
+  com: number;
+  fijo: number;
+  cpt: number;
+  envio: number;
+  otras: number;
 };
 
-const BASELINE_APPS = 400;
-const SHIPPING_OPTIMIZATION = 0.15;
+const PLATFORM_RATES: Record<Platform, Rates> = {
+  shopify:     { plan: 1690,  com: 3.48, fijo: 4, cpt: 0.5, envio: 160, otras: 1105 },
+  vtex:        { plan: 9500,  com: 3.20, fijo: 4, cpt: 1.9, envio: 160, otras: 1500 },
+  woocommerce: { plan: 900,   com: 3.60, fijo: 4, cpt: 0.0, envio: 160, otras: 1800 },
+  wix:         { plan: 1200,  com: 3.40, fijo: 4, cpt: 0.0, envio: 160, otras: 1100 },
+  magento:     { plan: 12000, com: 3.30, fijo: 4, cpt: 0.0, envio: 160, otras: 2000 },
+  squarespace: { plan: 900,   com: 3.30, fijo: 4, cpt: 0.0, envio: 160, otras: 800 },
+  bigcommerce: { plan: 1200,  com: 3.30, fijo: 4, cpt: 0.0, envio: 160, otras: 900 },
+  prestashop:  { plan: 1500,  com: 3.60, fijo: 4, cpt: 0.0, envio: 160, otras: 1200 },
+  jumpseller:  { plan: 900,   com: 3.50, fijo: 4, cpt: 0.5, envio: 160, otras: 900 },
+  ecwid:       { plan: 900,   com: 3.50, fijo: 4, cpt: 0.0, envio: 160, otras: 900 },
+  salesforce:  { plan: 15000, com: 3.30, fijo: 4, cpt: 0.5, envio: 160, otras: 2500 },
+  propia:      { plan: 8000,  com: 3.50, fijo: 4, cpt: 0.0, envio: 160, otras: 1500 },
+  other:       { plan: 1690,  com: 3.48, fijo: 4, cpt: 0.5, envio: 160, otras: 1105 },
+  tiendanube:  { plan: 3499 * 0.75, com: 2.99, fijo: 3, cpt: 0, envio: 130, otras: 0 },
+};
+
+// Baseline oficial Tiendanube (plan con 25% de descuento aplicado arriba).
+const TN_RATES = PLATFORM_RATES.tiendanube;
 
 const SALES_RANGES = [
   { value: 'r1', label: 'Menos de $50,000 al mes', gmv: 25_000 },
@@ -85,18 +121,19 @@ const SHIPPING_RANGES = [
   { value: 's5', label: 'Más de $200', cost: 220 },
 ] as const;
 
-// Copy simplificado — sin "gateway", "CPT", solo "comisión".
 const CPT_RANGES = [
-  { value: 'c1', label: 'Casi nada, menos del 3%', pct: 0.025 },
-  { value: 'c2', label: 'Entre 3% y 5%', pct: 0.04 },
-  { value: 'c3', label: 'Entre 5% y 7%', pct: 0.06 },
-  { value: 'c4', label: 'Entre 7% y 10%', pct: 0.085 },
-  { value: 'c5', label: 'Más del 10%', pct: 0.12 },
+  { value: 'c1', label: 'Casi nada, menos del 3%', pct: 2.5 },
+  { value: 'c2', label: 'Entre 3% y 5%', pct: 4 },
+  { value: 'c3', label: 'Entre 5% y 7%', pct: 6 },
+  { value: 'c4', label: 'Entre 7% y 10%', pct: 8.5 },
+  { value: 'c5', label: 'Más del 10%', pct: 12 },
   { value: 'c0', label: 'No estoy segura', pct: -1 },
 ] as const;
 
 function formatMXN(n: number) {
-  return new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 }).format(n);
+  return new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 }).format(
+    Math.round(n),
+  );
 }
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7; // 7 = reporte
@@ -105,7 +142,32 @@ function delay(ms: number) {
   return new Promise<void>((r) => setTimeout(r, ms));
 }
 
+// Captura UTMs del querystring una vez al montar el componente.
+type Utm = {
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_content?: string;
+  utm_term?: string;
+};
+
+function useUtm(): Utm {
+  const [utm, setUtm] = useState<Utm>({});
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const p = new URLSearchParams(window.location.search);
+    const captured: Utm = {};
+    for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const) {
+      const v = p.get(key);
+      if (v) captured[key] = v.slice(0, 120);
+    }
+    setUtm(captured);
+  }, []);
+  return utm;
+}
+
 export function CotizadorQuiz() {
+  const utm = useUtm();
   const [step, setStep] = useState<Step>(1);
 
   // Screen 1
@@ -148,55 +210,64 @@ export function CotizadorQuiz() {
 
     const gmv = sales.gmv;
     const orders = Math.max(1, Math.round(gmv / ticket.avg));
-    const platformDefault = PLATFORM_COSTS[platform];
 
-    const effectiveFeePct = cpt.pct >= 0 ? cpt.pct : platformDefault.fee;
+    // Tarifas de la plataforma que reporta
+    const p = PLATFORM_RATES[platform];
+
+    // Fee efectivo: si reportó su %, lo usamos; si no, el default plataforma
+    const cptReportedPct = cpt.pct >= 0 ? cpt.pct : p.com + p.cpt;
     const feeUsedSource: 'reported' | 'default' =
       cpt.pct >= 0 ? 'reported' : 'default';
 
-    const currentFee = Math.round(gmv * effectiveFeePct);
-    const currentApps = platformDefault.apps;
-    const currentShipping = shipping.cost * orders;
-    const currentTotal = currentFee + currentApps + currentShipping;
+    // Modelo: si reportó su %, asumimos que es LA suma total (com + cpt);
+    // si no, usamos default separado como en el kit.
+    // Costo mensual "hoy" (12 = anual)
+    const hoyPlan = p.plan;
+    const hoyPas =
+      cpt.pct >= 0
+        ? (gmv * (cptReportedPct / 100)) + (orders * p.fijo) // total reportado
+        : (gmv * (p.com / 100)) + (orders * p.fijo);
+    const hoyCpt = cpt.pct >= 0 ? 0 : gmv * (p.cpt / 100);
+    const hoyEnvio = shipping.cost * orders;
+    const hoyOtras = p.otras;
+    const hoyMes = hoyPlan + hoyPas + hoyCpt + hoyEnvio + hoyOtras;
+    const hoyAnio = hoyMes * 12;
 
-    // Baseline (plataforma con 0% comisión + apps mínimas + envíos negociados)
-    const baselineFee = 0;
-    const baselineApps = BASELINE_APPS;
-    const baselineShipping = Math.round(
-      shipping.cost * orders * (1 - SHIPPING_OPTIMIZATION),
-    );
-    const baselineTotal = baselineFee + baselineApps + baselineShipping;
+    // Baseline Tiendanube (mes)
+    const tn = TN_RATES;
+    // Envío TN: usa el mejor entre lo que reporta y el precio TN
+    const tnEnvioPorPedido = Math.min(shipping.cost || tn.envio, tn.envio);
+    const tnPlan = tn.plan;
+    const tnPas = gmv * (tn.com / 100) + orders * tn.fijo;
+    const tnEnvio = tnEnvioPorPedido * orders;
+    const tnOtras = tn.otras;
+    const tnMes = tnPlan + tnPas + tnEnvio + tnOtras;
+    const tnAnio = tnMes * 12;
 
-    const savingsFee = currentFee - baselineFee;
-    const savingsApps = Math.max(0, currentApps - baselineApps);
-    const savingsShipping = currentShipping - baselineShipping;
-    const savingsMonthly = savingsFee + savingsApps + savingsShipping;
-    const savingsAnnual = savingsMonthly * 12;
+    const ahorroMes = Math.max(0, hoyMes - tnMes);
+    const ahorroAnio = ahorroMes * 12;
 
-    const score =
-      currentTotal > 0
-        ? Math.round((savingsMonthly / currentTotal) * 100)
-        : 0;
-
-    // Bandera especial: si ya usa Tiendanube, esto es un "already there"
+    const score = hoyMes > 0 ? Math.round((ahorroMes / hoyMes) * 100) : 0;
     const isAlreadyOptimal = platform === 'tiendanube';
 
     return {
       gmv,
       orders,
       ticketAvg: ticket.avg,
-      effectiveFeePct,
+      cptReportedPct,
       feeUsedSource,
-      currentFee,
-      currentApps,
-      currentShipping,
-      currentTotal,
-      baselineTotal,
-      savingsFee,
-      savingsApps,
-      savingsShipping,
-      savingsMonthly,
-      savingsAnnual,
+      // Rubros mensuales del "hoy" para el desglose visual
+      hoyPlan,
+      hoyPas,
+      hoyCpt,
+      hoyEnvio,
+      hoyOtras,
+      hoyMes,
+      hoyAnio,
+      tnMes,
+      tnAnio,
+      ahorroMes,
+      ahorroAnio,
       score,
       isAlreadyOptimal,
     };
@@ -261,10 +332,12 @@ export function CotizadorQuiz() {
       envio_promedio: SHIPPING_RANGES.find((r) => r.value === rangeShipping)?.label,
       comision_reportada: CPT_RANGES.find((r) => r.value === rangeCpt)?.label,
       comision_fuente: report.feeUsedSource,
-      costo_mensual_est: `$${formatMXN(report.currentTotal)} MXN`,
-      ahorro_mensual_est: `$${formatMXN(report.savingsMonthly)} MXN`,
-      ahorro_anual_est: `$${formatMXN(report.savingsAnnual)} MXN`,
+      costo_mensual_est: `$${formatMXN(report.hoyMes)} MXN`,
+      ahorro_mensual_est: `$${formatMXN(report.ahorroMes)} MXN`,
+      ahorro_anual_est: `$${formatMXN(report.ahorroAnio)} MXN`,
+      score_evitable: `${report.score}%`,
       ya_en_plataforma_optima: report.isAlreadyOptimal ? 'sí' : 'no',
+      ...utm,
     };
 
     try {
@@ -662,18 +735,19 @@ type ReportData = {
   gmv: number;
   orders: number;
   ticketAvg: number;
-  effectiveFeePct: number;
+  cptReportedPct: number;
   feeUsedSource: 'reported' | 'default';
-  currentFee: number;
-  currentApps: number;
-  currentShipping: number;
-  currentTotal: number;
-  baselineTotal: number;
-  savingsFee: number;
-  savingsApps: number;
-  savingsShipping: number;
-  savingsMonthly: number;
-  savingsAnnual: number;
+  hoyPlan: number;
+  hoyPas: number;
+  hoyCpt: number;
+  hoyEnvio: number;
+  hoyOtras: number;
+  hoyMes: number;
+  hoyAnio: number;
+  tnMes: number;
+  tnAnio: number;
+  ahorroMes: number;
+  ahorroAnio: number;
   score: number;
   isAlreadyOptimal: boolean;
 };
@@ -689,7 +763,6 @@ function LiveReport({
   report: ReportData;
   rangeSalesLabel: string;
 }) {
-  // Fix Tiendanube: si ya está en la plataforma correcta, cambiar el mensaje
   if (report.isAlreadyOptimal) {
     return (
       <div className="rounded-[14px] border border-brand/40 bg-surface-1 p-[clamp(22px,3vw,36px)]">
@@ -755,10 +828,9 @@ function LiveReport({
     );
   }
 
-  // Reporte estándar: hay ahorro potencial
   return (
     <div className="space-y-4">
-      {/* Card principal — el número grande y el mensaje */}
+      {/* Card principal */}
       <div className="rounded-[14px] border border-brand/40 bg-surface-1 p-[clamp(22px,3vw,36px)]">
         <div className="mono-label">
           Reporte de {nombre} · {PLATFORM_LABELS[platform]}
@@ -787,7 +859,7 @@ function LiveReport({
                 'linear-gradient(180deg, transparent 68%, rgba(237,224,74,0.20) 68%)',
             }}
           >
-            ${formatMXN(report.savingsMonthly)}
+            ${formatMXN(report.ahorroMes)}
           </span>
           <span
             className="text-texto-2"
@@ -799,37 +871,47 @@ function LiveReport({
         <p className="mt-3 text-body-l text-texto-2">
           Y{' '}
           <b className="text-texto-1">
-            ${formatMXN(report.savingsAnnual)}
+            ${formatMXN(report.ahorroAnio)}
           </b>{' '}
-          al año. Es dinero que hoy pagas en comisiones, apps y envíos que se
-          pueden reducir.
+          al año. Es dinero que hoy pagas en plan, comisiones, apps y envíos
+          que se pueden reducir.
         </p>
       </div>
 
-      {/* Card 2 — qué te está costando cada cosa */}
+      {/* Card 2 — desglose */}
       <div className="rounded-[14px] border border-borde bg-surface-1 p-[clamp(22px,3vw,32px)]">
-        <div className="mono-label">De dónde sale ese ahorro</div>
+        <div className="mono-label">De dónde sale ese ahorro (al mes)</div>
         <div className="mt-4 space-y-3.5">
+          {report.hoyPlan > 0 && (
+            <CostRow
+              label="Plan que pagas a tu plataforma"
+              amount={report.hoyPlan}
+              note="Al mes, sin importar cuánto vendas"
+              severity="high"
+            />
+          )}
           <CostRow
-            label="Comisiones que hoy te cobran"
-            amount={report.currentFee}
+            label="Comisiones por cada venta"
+            amount={report.hoyPas + report.hoyCpt}
             note={
               report.feeUsedSource === 'reported'
-                ? `${(report.effectiveFeePct * 100).toFixed(1)}% de tus ventas`
+                ? `${report.cptReportedPct.toFixed(1)}% de tus ventas`
                 : `Aproximado para ${PLATFORM_LABELS[platform]}`
             }
             severity="high"
           />
-          <CostRow
-            label="Lo que gastas en apps y funciones extras"
-            amount={report.currentApps}
-            note="Al mes, promedio de tu plataforma"
-            severity="mid"
-          />
+          {report.hoyOtras > 0 && (
+            <CostRow
+              label="Apps y herramientas extras"
+              amount={report.hoyOtras}
+              note={`Al mes, promedio para ${PLATFORM_LABELS[platform]}`}
+              severity="mid"
+            />
+          )}
           <CostRow
             label={`Envíos de tus ~${report.orders.toLocaleString('es-MX')} pedidos`}
-            amount={report.currentShipping}
-            note="Negociando volumen se puede bajar 15%"
+            amount={report.hoyEnvio}
+            note="Se puede negociar más barato por volumen"
             severity="mid"
           />
         </div>
@@ -846,7 +928,7 @@ function LiveReport({
               className="font-display font-bold text-texto-1"
               style={{ fontSize: '20px', letterSpacing: '-0.02em' }}
             >
-              ${formatMXN(report.currentTotal)} / mes
+              ${formatMXN(report.hoyMes)} / mes
             </span>
           </div>
         </div>
@@ -863,11 +945,11 @@ function LiveReport({
           }}
         >
           ¿Quieres que te ayudemos a recuperar esos $
-          {formatMXN(report.savingsMonthly)} al mes?
+          {formatMXN(report.ahorroMes)} al mes?
         </p>
         <a
           href={`https://wa.me/525537344652?text=${encodeURIComponent(
-            `Hola Paola, hice el cotizador. Estoy en ${PLATFORM_LABELS[platform]} vendiendo ${rangeSalesLabel}. El reporte me da un ahorro de $${formatMXN(report.savingsMonthly)}/mes. Quiero agendar la llamada.`,
+            `Hola Paola, hice el cotizador. Estoy en ${PLATFORM_LABELS[platform]} vendiendo ${rangeSalesLabel}. El reporte me da un ahorro de $${formatMXN(report.ahorroMes)}/mes. Quiero agendar la llamada.`,
           )}`}
           target="_blank"
           rel="noopener noreferrer"
@@ -880,7 +962,8 @@ function LiveReport({
           className="mt-3 font-mono text-[10.5px] text-texto-4"
           style={{ letterSpacing: '0.04em' }}
         >
-          Sin tarjeta, sin compromiso. Cifras estimadas con lo que reportaste.
+          Estimación con base en tarifas de referencia y los datos que
+          reportaste. No es una cotización oficial.
         </p>
       </div>
     </div>

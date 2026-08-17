@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
 
 // API route que detecta la plataforma de e-commerce de un sitio.
-// Recibe { url } y devuelve { platform, confidence, hostname }.
-// Fetch server-side al HTML del sitio, busca patrones típicos.
-// Timeout de 6s para no colgar la UI. Sin cache — el resultado importa
-// que sea correcto en el momento, no rápido.
+// POST { url } -> { platform, confidence, hostname, signals }.
+//
+// Fetch server-side (imposible desde el browser por CORS). Lee hasta 300KB
+// del HTML + inspecciona headers. Sistema de scoring: cada patrón matcheado
+// suma 1 punto; matchear un header bonifica +2. La plataforma con más
+// puntos gana; confidence según puntos totales.
+//
+// Basado en las firmas del kit oficial de Partners de Tiendanube.
 
 export const runtime = 'nodejs';
 export const maxDuration = 10;
@@ -18,99 +22,212 @@ type Platform =
   | 'tiendanube'
   | 'squarespace'
   | 'bigcommerce'
+  | 'prestashop'
+  | 'jumpseller'
+  | 'ecwid'
+  | 'salesforce'
   | 'other';
+
+type Signature = {
+  platform: Platform;
+  patterns: string[];
+  headers?: string[];
+};
+
+const SIGNATURES: Signature[] = [
+  {
+    platform: 'tiendanube',
+    patterns: [
+      'mitiendanube.com',
+      'tiendanube.com',
+      'nuvemshop.com',
+      'd2r9epyceweg5n.cloudfront.net',
+      'acdn.tiendanube.com',
+      'acdn-us.tiendanube.com',
+      'ls.registerevent',
+    ],
+  },
+  {
+    platform: 'shopify',
+    patterns: [
+      'cdn.shopify.com',
+      'shopify.theme',
+      'shopify-features',
+      '/cdn/shop/',
+      'myshopify.com',
+      'shopifycloud',
+      'shopify-boomerang',
+    ],
+    headers: ['x-shopify-stage', 'x-shopid', 'x-shardid'],
+  },
+  {
+    platform: 'vtex',
+    patterns: [
+      'vtexassets.com',
+      'vtexcommercestable',
+      'vtex.com.br',
+      'vtex-render-runtime',
+      '__runtime__',
+      'vtexcommercebeta',
+    ],
+    headers: ['x-vtex-io', 'x-vtex-router-cache', 'x-vtex-backend-io'],
+  },
+  {
+    platform: 'woocommerce',
+    patterns: [
+      'wp-content/plugins/woocommerce',
+      'woocommerce-js',
+      'wc-add-to-cart',
+      'woocommerce_params',
+      'wc_cart_fragments',
+    ],
+  },
+  {
+    platform: 'wix',
+    patterns: [
+      'wixstatic.com',
+      'wix-code',
+      '_wixcssstates',
+      'wixsite.com',
+      'parastorage.com',
+    ],
+    headers: ['x-wix-request-id', 'x-wix-published-version'],
+  },
+  {
+    platform: 'magento',
+    patterns: [
+      'mage/cookies',
+      'magento_ui',
+      '/static/version',
+      'magento_page_cache',
+      'requirejs/require.js',
+    ],
+  },
+  {
+    platform: 'squarespace',
+    patterns: [
+      'squarespace.com',
+      'static1.squarespace.com',
+      'static.squarespace_context',
+    ],
+  },
+  {
+    platform: 'bigcommerce',
+    patterns: ['bigcommerce.com', 'cdn11.bigcommerce.com', 'stencil-utils'],
+  },
+  {
+    platform: 'prestashop',
+    patterns: ['prestashop', '/modules/ps_'],
+  },
+  {
+    platform: 'jumpseller',
+    patterns: ['jumpseller.com', 'cdn.jumpseller'],
+  },
+  {
+    platform: 'ecwid',
+    patterns: ['ecwid.com', 'ec-storefront'],
+  },
+  {
+    platform: 'salesforce',
+    patterns: [
+      'demandware.static',
+      'dwstatic',
+      '/on/demandware.store/',
+    ],
+  },
+];
+
+function normalize(input: string): string | null {
+  let s = String(input || '').trim().toLowerCase();
+  if (!s) return null;
+  s = s
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .split('/')[0]
+    .split('?')[0];
+  if (!/^[a-z0-9][a-z0-9.-]{2,252}\.[a-z]{2,24}$/.test(s)) return null;
+  return s;
+}
+
+// SSRF guard: bloquear IPs y hostnames de redes internas
+function isPrivate(host: string) {
+  return /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|\[?::1)/.test(
+    host,
+  );
+}
+
+async function fetchHead(url: string) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 7000);
+  try {
+    const res = await fetch(url, {
+      redirect: 'follow',
+      signal: controller.signal,
+      headers: {
+        'user-agent':
+          'Mozilla/5.0 (compatible; btiq-diagnostic/1.0; +https://btiq.mx)',
+        accept: 'text/html,application/xhtml+xml',
+        'accept-language': 'es-MX,es;q=0.9',
+      },
+    });
+    // 300KB alcanzan: las firmas viven en el <head> y en los scripts de arriba
+    const buf = await res.arrayBuffer();
+    const html = Buffer.from(buf.slice(0, 300 * 1024)).toString('utf8');
+    return { html, headers: res.headers, status: res.status };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function analyze(html: string, headers: Headers) {
+  const hay = html.toLowerCase();
+  const hs: Record<string, string> = {};
+  headers.forEach((v, k) => {
+    hs[k.toLowerCase()] = String(v).toLowerCase();
+  });
+  const hsBlob = Object.entries(hs)
+    .map(([k, v]) => `${k}:${v}`)
+    .join(' ');
+
+  let best: {
+    platform: Platform;
+    signals: string[];
+    points: number;
+  } | null = null;
+
+  for (const sig of SIGNATURES) {
+    const signals: string[] = [];
+    for (const p of sig.patterns) {
+      if (hay.includes(p)) signals.push(p);
+    }
+    for (const h of sig.headers ?? []) {
+      if (hsBlob.includes(h)) signals.push('header:' + h);
+    }
+    if (!signals.length) continue;
+    const points =
+      signals.length +
+      (sig.headers && signals.some((s) => s.startsWith('header:')) ? 2 : 0);
+    if (!best || points > best.points) {
+      best = { platform: sig.platform, signals, points };
+    }
+  }
+
+  if (!best) return null;
+  const confidence: 'high' | 'medium' | 'low' =
+    best.points >= 3 ? 'high' : best.points === 2 ? 'medium' : 'low';
+  return {
+    platform: best.platform,
+    confidence,
+    signals: best.signals.slice(0, 5),
+  };
+}
 
 type DetectResult = {
   platform: Platform;
   confidence: 'high' | 'medium' | 'low';
   hostname: string;
+  signals?: string[];
 };
-
-// Patrones ordenados por prioridad — los primeros son señales más fuertes.
-const PATTERNS: {
-  platform: Platform;
-  confidence: 'high' | 'medium';
-  needles: RegExp[];
-}[] = [
-  {
-    platform: 'shopify',
-    confidence: 'high',
-    needles: [
-      /myshopify\.com/i,
-      /cdn\.shopify\.com/i,
-      /Shopify\.theme/,
-      /window\.Shopify/,
-      /shopify-section/i,
-    ],
-  },
-  {
-    platform: 'tiendanube',
-    confidence: 'high',
-    needles: [
-      /mitiendanube\.com/i,
-      /tiendanube\.com\/js/i,
-      /nuvem-shop|tiendanube-store/i,
-    ],
-  },
-  {
-    platform: 'woocommerce',
-    confidence: 'high',
-    needles: [
-      /wp-content\/plugins\/woocommerce/i,
-      /wc-add-to-cart|woocommerce-page/i,
-      /generator.*WooCommerce/i,
-    ],
-  },
-  {
-    platform: 'vtex',
-    confidence: 'high',
-    needles: [/vtexcommercestable\.com\.br/i, /vtex\.com\.br/i, /vtex-io/i],
-  },
-  {
-    platform: 'wix',
-    confidence: 'high',
-    needles: [
-      /static\.parastorage\.com/i,
-      /wix\.com/i,
-      /wixstatic\.com/i,
-      /X-Wix-Request-Id/i,
-    ],
-  },
-  {
-    platform: 'magento',
-    confidence: 'high',
-    needles: [/mage-cache-storage/i, /Magento_/, /magentocloud/i],
-  },
-  {
-    platform: 'squarespace',
-    confidence: 'high',
-    needles: [/squarespace\.com/i, /static1\.squarespace\.com/i],
-  },
-  {
-    platform: 'bigcommerce',
-    confidence: 'high',
-    needles: [/bigcommerce\.com/i, /cdn\d*\.bcapp\.dev/i],
-  },
-];
-
-function normalizeUrl(input: string): string | null {
-  const trimmed = input.trim();
-  if (!trimmed) return null;
-  // Agregar https:// si falta protocolo
-  const withProto = /^https?:\/\//i.test(trimmed)
-    ? trimmed
-    : `https://${trimmed}`;
-  try {
-    const u = new URL(withProto);
-    // Solo http(s)
-    if (u.protocol !== 'https:' && u.protocol !== 'http:') return null;
-    // Solo dominios con al menos un punto (evita "localhost" y strings raros)
-    if (!u.hostname.includes('.')) return null;
-    return u.toString();
-  } catch {
-    return null;
-  }
-}
 
 export async function POST(req: Request) {
   let body: { url?: string };
@@ -120,14 +237,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const targetUrl = body.url ? normalizeUrl(body.url) : null;
-  if (!targetUrl) {
+  const hostname = body.url ? normalize(body.url) : null;
+  if (!hostname) {
     return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
   }
+  if (isPrivate(hostname)) {
+    return NextResponse.json({ error: 'Forbidden host' }, { status: 400 });
+  }
 
-  const hostname = new URL(targetUrl).hostname;
-
-  // Shortcut: si el hostname mismo ya delata la plataforma
+  // Hostname puede delatar la plataforma sin necesidad de fetch
   if (/\.myshopify\.com$/i.test(hostname)) {
     return NextResponse.json<DetectResult>({
       platform: 'shopify',
@@ -135,7 +253,7 @@ export async function POST(req: Request) {
       hostname,
     });
   }
-  if (/mitiendanube\.com$/i.test(hostname)) {
+  if (/\.mitiendanube\.com$/i.test(hostname) || /\.nuvemshop\.com/i.test(hostname)) {
     return NextResponse.json<DetectResult>({
       platform: 'tiendanube',
       confidence: 'high',
@@ -143,78 +261,25 @@ export async function POST(req: Request) {
     });
   }
 
-  // Fetch con timeout
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 6000);
-
-  try {
-    const res = await fetch(targetUrl, {
-      signal: controller.signal,
-      headers: {
-        // User-Agent realista — algunos sitios bloquean fetches sin UA
-        'User-Agent':
-          'Mozilla/5.0 (compatible; btiq-diagnostic/1.0; +https://btiq.mx)',
-        Accept: 'text/html,application/xhtml+xml',
-      },
-      // Redirects (301/302) se siguen por default hasta 20 saltos
-    });
-    clearTimeout(timeout);
-
-    if (!res.ok) {
+  // Intentar https, luego http como fallback
+  for (const scheme of ['https://', 'http://']) {
+    try {
+      const r = await fetchHead(scheme + hostname);
+      const hit = analyze(r.html, r.headers);
       return NextResponse.json<DetectResult>({
-        platform: 'other',
-        confidence: 'low',
+        platform: hit?.platform ?? 'other',
+        confidence: hit?.confidence ?? 'low',
         hostname,
+        signals: hit?.signals,
       });
+    } catch {
+      // intenta el siguiente esquema
     }
-
-    // Solo leemos los primeros 150KB del HTML — los patterns viven en el
-    // <head> y los primeros scripts, no hace falta bajar todo el sitio
-    const reader = res.body?.getReader();
-    if (!reader) {
-      return NextResponse.json<DetectResult>({
-        platform: 'other',
-        confidence: 'low',
-        hostname,
-      });
-    }
-
-    const decoder = new TextDecoder('utf-8');
-    let html = '';
-    const CAP = 150 * 1024;
-    while (html.length < CAP) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      html += decoder.decode(value, { stream: true });
-    }
-    await reader.cancel().catch(() => {});
-
-    // Buscar el primer patrón que matchee
-    for (const p of PATTERNS) {
-      for (const needle of p.needles) {
-        if (needle.test(html)) {
-          return NextResponse.json<DetectResult>({
-            platform: p.platform,
-            confidence: p.confidence,
-            hostname,
-          });
-        }
-      }
-    }
-
-    return NextResponse.json<DetectResult>({
-      platform: 'other',
-      confidence: 'low',
-      hostname,
-    });
-  } catch (err) {
-    clearTimeout(timeout);
-    // Timeout, DNS fail, CORS, etc. — respondemos 'other' para que la UI
-    // caiga al fallback de preguntar la plataforma manualmente.
-    return NextResponse.json<DetectResult>({
-      platform: 'other',
-      confidence: 'low',
-      hostname,
-    });
   }
+
+  return NextResponse.json<DetectResult>({
+    platform: 'other',
+    confidence: 'low',
+    hostname,
+  });
 }
