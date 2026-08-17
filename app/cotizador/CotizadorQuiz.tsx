@@ -96,12 +96,16 @@ const PLATFORM_RATES: Record<Platform, Rates> = {
 // Baseline oficial Tiendanube (plan con 25% de descuento aplicado arriba).
 const TN_RATES = PLATFORM_RATES.tiendanube;
 
-const SALES_RANGES = [
-  { value: 'r1', label: 'Menos de $50,000 al mes', gmv: 25_000 },
-  { value: 'r2', label: '$50,000 – $150,000', gmv: 100_000 },
-  { value: 'r3', label: '$150,000 – $500,000', gmv: 325_000 },
-  { value: 'r4', label: '$500,000 – $1 millón', gmv: 750_000 },
-  { value: 'r5', label: 'Más de $1 millón', gmv: 1_500_000 },
+// Rangos de # pedidos al mes. Preguntamos esto (no cuánto vende) porque
+// la gente comparte pedidos con menos fricción que revenue. GMV se deriva:
+// gmv = orders × ticket_promedio.
+const ORDERS_RANGES = [
+  { value: 'o1', label: 'Menos de 30 pedidos', orders: 15 },
+  { value: 'o2', label: '30 – 100 pedidos', orders: 65 },
+  { value: 'o3', label: '100 – 300 pedidos', orders: 200 },
+  { value: 'o4', label: '300 – 800 pedidos', orders: 550 },
+  { value: 'o5', label: '800 – 2,000 pedidos', orders: 1400 },
+  { value: 'o6', label: 'Más de 2,000 pedidos', orders: 3000 },
 ] as const;
 
 const TICKET_RANGES = [
@@ -178,7 +182,7 @@ export function CotizadorQuiz() {
   const [detected, setDetected] = useState(false);
 
   // Screens 2-5
-  const [rangeSales, setRangeSales] = useState('');
+  const [rangeOrders, setRangeOrders] = useState('');
   const [rangeTicket, setRangeTicket] = useState('');
   const [rangeShipping, setRangeShipping] = useState('');
   const [rangeCpt, setRangeCpt] = useState('');
@@ -196,20 +200,21 @@ export function CotizadorQuiz() {
   const report = useMemo(() => {
     if (
       !platform ||
-      !rangeSales ||
+      !rangeOrders ||
       !rangeTicket ||
       !rangeShipping ||
       !rangeCpt
     )
       return null;
-    const sales = SALES_RANGES.find((r) => r.value === rangeSales);
+    const ordersRange = ORDERS_RANGES.find((r) => r.value === rangeOrders);
     const ticket = TICKET_RANGES.find((r) => r.value === rangeTicket);
     const shipping = SHIPPING_RANGES.find((r) => r.value === rangeShipping);
     const cpt = CPT_RANGES.find((r) => r.value === rangeCpt);
-    if (!sales || !ticket || !shipping || !cpt) return null;
+    if (!ordersRange || !ticket || !shipping || !cpt) return null;
 
-    const gmv = sales.gmv;
-    const orders = Math.max(1, Math.round(gmv / ticket.avg));
+    // Ahora orders es reportado; GMV se deriva.
+    const orders = ordersRange.orders;
+    const gmv = orders * ticket.avg;
 
     // Tarifas de la plataforma que reporta
     const p = PLATFORM_RATES[platform];
@@ -271,7 +276,7 @@ export function CotizadorQuiz() {
       score,
       isAlreadyOptimal,
     };
-  }, [platform, rangeSales, rangeTicket, rangeShipping, rangeCpt]);
+  }, [platform, rangeOrders, rangeTicket, rangeShipping, rangeCpt]);
 
   async function handleUrlNext() {
     const raw = url.trim();
@@ -326,7 +331,7 @@ export function CotizadorQuiz() {
       tienda_url: url.trim(),
       plataforma: PLATFORM_LABELS[platform as Platform],
       plataforma_detectada: detected ? 'sí' : 'no',
-      rango_ventas: SALES_RANGES.find((r) => r.value === rangeSales)?.label,
+      rango_pedidos: ORDERS_RANGES.find((r) => r.value === rangeOrders)?.label,
       ticket_promedio: TICKET_RANGES.find((r) => r.value === rangeTicket)?.label,
       pedidos_estimados: report.orders,
       envio_promedio: SHIPPING_RANGES.find((r) => r.value === rangeShipping)?.label,
@@ -435,11 +440,11 @@ export function CotizadorQuiz() {
 
       {step === 2 && (
         <RangeScreen
-          title="¿Cuánto vendes al mes en tu tienda?"
-          hint="Aproximado en pesos mexicanos."
-          options={SALES_RANGES.map((r) => ({ value: r.value, label: r.label }))}
-          value={rangeSales}
-          onChange={setRangeSales}
+          title="¿Cuántos pedidos tienes al mes?"
+          hint="Aproximado está bien. Preferimos preguntar pedidos que ventas — es menos personal."
+          options={ORDERS_RANGES.map((r) => ({ value: r.value, label: r.label }))}
+          value={rangeOrders}
+          onChange={setRangeOrders}
           onBack={() => setStep(1)}
           onNext={() => setStep(3)}
         />
@@ -544,8 +549,8 @@ export function CotizadorQuiz() {
           nombre={nombre.trim().split(' ')[0] ?? ''}
           platform={platform as Platform}
           report={report}
-          rangeSalesLabel={
-            SALES_RANGES.find((r) => r.value === rangeSales)?.label ?? ''
+          rangeOrdersLabel={
+            ORDERS_RANGES.find((r) => r.value === rangeOrders)?.label ?? ''
           }
         />
       )}
@@ -756,12 +761,12 @@ function LiveReport({
   nombre,
   platform,
   report,
-  rangeSalesLabel,
+  rangeOrdersLabel,
 }: {
   nombre: string;
   platform: Platform;
   report: ReportData;
-  rangeSalesLabel: string;
+  rangeOrdersLabel: string;
 }) {
   if (report.isAlreadyOptimal) {
     return (
@@ -814,7 +819,7 @@ function LiveReport({
         <div className="mt-7">
           <a
             href={`https://wa.me/525537344652?text=${encodeURIComponent(
-              `Hola Paola, hice el cotizador. Ya estoy en Tiendanube vendiendo ${rangeSalesLabel}. Quiero ver cómo pueden ayudarme a crecer.`,
+              `Hola Paola, hice el cotizador. Ya estoy en Tiendanube con ${rangeOrdersLabel} al mes. Quiero ver cómo pueden ayudarme a crecer.`,
             )}`}
             target="_blank"
             rel="noopener noreferrer"
@@ -949,7 +954,7 @@ function LiveReport({
         </p>
         <a
           href={`https://wa.me/525537344652?text=${encodeURIComponent(
-            `Hola Paola, hice el cotizador. Estoy en ${PLATFORM_LABELS[platform]} vendiendo ${rangeSalesLabel}. El reporte me da un ahorro de $${formatMXN(report.ahorroMes)}/mes. Quiero agendar la llamada.`,
+            `Hola Paola, hice el cotizador. Estoy en ${PLATFORM_LABELS[platform]} con ${rangeOrdersLabel} al mes. El reporte me da un ahorro de $${formatMXN(report.ahorroMes)}/mes. Quiero agendar la llamada.`,
           )}`}
           target="_blank"
           rel="noopener noreferrer"
