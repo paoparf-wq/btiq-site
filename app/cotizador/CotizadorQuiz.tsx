@@ -27,7 +27,9 @@ import {
 } from 'react';
 import { events } from '@/lib/analytics';
 
-const FORMSPREE_ENDPOINT = process.env.NEXT_PUBLIC_FORMSPREE_ENDPOINT;
+// FORMSPREE_ENDPOINT ya no se usa aquí — la llamada va al server-side
+// /api/lead-cotizador, que a su vez pega a Formspree con la env var
+// server-side (no expuesta al cliente).
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const TEL_RE = /^[\d\s+()-]{8,}$/;
 const URL_RE = /^(https?:\/\/)?[a-z0-9-]+(\.[a-z0-9-]+)+/i;
@@ -331,23 +333,38 @@ export function CotizadorQuiz() {
       tienda_url: url.trim(),
       plataforma: PLATFORM_LABELS[platform as Platform],
       plataforma_detectada: detected ? 'sí' : 'no',
-      rango_pedidos: ORDERS_RANGES.find((r) => r.value === rangeOrders)?.label,
-      ticket_promedio: TICKET_RANGES.find((r) => r.value === rangeTicket)?.label,
+      rango_pedidos: ORDERS_RANGES.find((r) => r.value === rangeOrders)?.label ?? '',
+      ticket_promedio: TICKET_RANGES.find((r) => r.value === rangeTicket)?.label ?? '',
       pedidos_estimados: report.orders,
-      envio_promedio: SHIPPING_RANGES.find((r) => r.value === rangeShipping)?.label,
-      comision_reportada: CPT_RANGES.find((r) => r.value === rangeCpt)?.label,
+      gmv_estimado: report.gmv,
+      envio_promedio: SHIPPING_RANGES.find((r) => r.value === rangeShipping)?.label ?? '',
+      comision_reportada: CPT_RANGES.find((r) => r.value === rangeCpt)?.label ?? '',
       comision_fuente: report.feeUsedSource,
       costo_mensual_est: `$${formatMXN(report.hoyMes)} MXN`,
       ahorro_mensual_est: `$${formatMXN(report.ahorroMes)} MXN`,
       ahorro_anual_est: `$${formatMXN(report.ahorroAnio)} MXN`,
       score_evitable: `${report.score}%`,
       ya_en_plataforma_optima: report.isAlreadyOptimal ? 'sí' : 'no',
+      // Desglose numérico para el brief de Paola
+      hoy_plan: report.hoyPlan,
+      hoy_comisiones: report.hoyPas + report.hoyCpt,
+      hoy_apps: report.hoyOtras,
+      hoy_envios: report.hoyEnvio,
+      hoy_total: report.hoyMes,
+      tn_plan: TN_RATES.plan,
+      tn_comisiones: report.gmv * (TN_RATES.com / 100) + report.orders * TN_RATES.fijo,
+      tn_envios: report.tnMes - TN_RATES.plan - (report.gmv * (TN_RATES.com / 100) + report.orders * TN_RATES.fijo),
+      tn_total: report.tnMes,
+      ahorro_total_num: report.ahorroMes,
       ...utm,
     };
 
     try {
+      // El endpoint /api/lead-cotizador manda Formspree + 2 emails Resend
+      // (uno al lead con reporte, otro brief a Paola). Nunca rechaza — si
+      // Resend falla igual devuelve ok:true para que la UI avance.
       const [response] = await Promise.all([
-        fetch(FORMSPREE_ENDPOINT ?? '', {
+        fetch('/api/lead-cotizador', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
