@@ -110,7 +110,7 @@ export function Hero() {
           </span>
         </div>
 
-        <h1 className="max-w-[17ch] text-display-xl">
+        <h1 className="max-w-[17ch] font-serif text-display-xl" style={{ fontWeight: 400 }}>
           No somos tu agencia. Estamos en tu{' '}
           <AnimatedMark>nómina</AnimatedMark>.
         </h1>

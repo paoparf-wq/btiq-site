@@ -80,8 +80,8 @@ export function Casos() {
               <div className="mono-label">{c.sector}</div>
 
               <h3
-                className="mt-3 font-display font-bold leading-[1.15]"
-                style={{ fontSize: 'clamp(1.25rem, 2vw, 1.5rem)', letterSpacing: '-0.02em' }}
+                className="mt-3 font-serif leading-[1.1]"
+                style={{ fontSize: 'clamp(1.5rem, 2.3vw, 1.875rem)', letterSpacing: '-0.015em', fontWeight: 400 }}
               >
                 {c.cliente}
               </h3>
@@ -98,7 +98,7 @@ export function Casos() {
                 <div className="font-mono text-[10.5px] uppercase tracking-[0.08em] text-texto-4">
                   {c.servicio}
                 </div>
-                <p className="mt-2 text-texto-3" style={{ fontSize: '0.9375rem', lineHeight: 1.55 }}>
+                <p className="mt-2 text-texto-3" style={{ fontSize: '1.0625rem', lineHeight: 1.55 }}>
                   {c.hicimos}
                 </p>
               </div>

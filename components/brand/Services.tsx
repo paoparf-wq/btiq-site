@@ -1,54 +1,72 @@
 import { SectionHead } from './SectionHead';
 
-// Servicios — 3 cards con hover translateY + brand shadow + brand border.
-// Estructura por card: header (code + metric) → título display-m → claim →
-// descripción → tags con hairline superior.
+// Servicios — 4 cards organizados por etapa del funnel:
+// Atracción → Conversión → Fidelización → Inteligencia + IA.
+// Cada card lleva code + métrica en la esquina, stage title en serif,
+// claim italic, y una lista de sub-servicios (nombre en Inter semibold +
+// descriptor). Grid 2×2 en lg.
+
+type SubService = {
+  name: string;
+  detail: string;
+};
 
 type Service = {
-  code: 'PERF' | 'WEB' | 'EVT' | 'IM';
+  code: 'ATR' | 'CONV' | 'FID' | 'IA';
+  stage: string;
   metric: string;
-  title: string;
   claim: string;
-  description: string;
-  tags: string[];
+  subServices: SubService[];
 };
 
 const SERVICES: Service[] = [
   {
-    code: 'PERF',
+    code: 'ATR',
+    stage: 'Atracción',
     metric: '4.8× ROAS',
-    title: 'Performance Marketing',
-    claim: 'Cada peso invertido te regresa tres.',
-    description:
-      'Paid media, CRM, e-commerce y marketplaces optimizados para ROI. Funnel completo, no solo clics.',
-    tags: ['Meta', 'Google', 'TikTok', 'HubSpot'],
+    claim: 'Que tu marca llegue a quien sí compra.',
+    subServices: [
+      { name: 'Performance Marketing', detail: 'Meta, Google, TikTok Ads' },
+      { name: 'Contenido & Redes', detail: 'orgánico, community, editorial' },
+      { name: 'SEO', detail: 'posicionamiento orgánico' },
+      { name: 'Eventos & Activaciones', detail: 'B2B, ferias, lanzamientos' },
+    ],
   },
   {
-    code: 'WEB',
+    code: 'CONV',
+    stage: 'Conversión',
     metric: '+127% conv.',
-    title: 'Web & tiendas en línea',
-    claim: 'Que convierten, no que solo se ven bonitas.',
-    description:
-      'Sitios y e-commerce listos para vender. Partners oficiales de Tiendanube: implementación, integraciones y optimización continua basada en data.',
-    tags: ['Tiendanube', 'Next.js', 'Shopify', 'GA4'],
+    claim: 'Tu canal digital que sí vende.',
+    subServices: [
+      { name: 'Web', detail: 'Next.js, WordPress, landings' },
+      { name: 'Tiendas en línea', detail: 'Tiendanube — Partners oficiales' },
+      { name: 'Marketplaces', detail: 'Mercado Libre, Amazon, TikTok Shop' },
+      { name: 'CRO & Analytics', detail: 'GA4, Tag Manager' },
+    ],
   },
   {
-    code: 'EVT',
-    metric: '87% leads cualif.',
-    title: 'Eventos corporativos',
-    claim: 'Generan negocio, no fotos para LinkedIn.',
-    description:
-      'Activaciones, lanzamientos y experiencias que generan leads cualificados, no solo asistencia.',
-    tags: ['B2B', 'Producción', 'Activación'],
+    code: 'FID',
+    stage: 'Fidelización',
+    metric: 'Multi-canal',
+    claim: 'Convertir clientes en fans que recompran.',
+    subServices: [
+      { name: 'CRM & Automatización', detail: 'HubSpot, workflows' },
+      { name: 'Email marketing', detail: 'segmentación, journeys' },
+      { name: 'WhatsApp Business', detail: 'broadcast, chatbots' },
+      { name: 'Remarketing', detail: 'dinámico multi-canal' },
+    ],
   },
   {
-    code: 'IM',
+    code: 'IA',
+    stage: 'Inteligencia + IA',
     metric: '6 metodologías',
-    title: 'Inteligencia de mercado',
     claim: 'Decidir con datos, no con corazonadas.',
-    description:
-      'Estudios cuali/cuanti, geomarketing, neuromarketing y sistemas de evaluación de eventos. Convertimos incertidumbre en decisiones accionables.',
-    tags: ['Cuali/Cuanti', 'Geomarketing', 'Neuromarketing', 'EventScore'],
+    subServices: [
+      { name: 'Inteligencia de mercado', detail: 'cuali/cuanti, geo, neuro' },
+      { name: 'EventScore', detail: 'evaluación de eventos' },
+      { name: 'IA aplicada', detail: 'automatizaciones, agentes, predictivo' },
+      { name: 'Dashboards', detail: 'data storytelling' },
+    ],
   },
 ];
 
@@ -60,9 +78,9 @@ export function Services() {
           number="01"
           title={
             <>
-              Cuatro motores.
+              Cuatro etapas.
               <br />
-              Una promesa.
+              Un solo equipo.
             </>
           }
         />
@@ -81,36 +99,41 @@ function ServiceCard({ service: s }: { service: Service }) {
     <article
       className="group relative flex flex-col rounded-[14px] border border-borde bg-surface-1 p-[clamp(24px,2.6vw,32px)] transition-all ease-brand duration-300 hover:-translate-y-1 hover:border-borde-hover hover:bg-surface-2 hover:shadow-brand-hover"
     >
-      {/* Header: code + metric */}
+      {/* Meta row: code + metric */}
       <div className="flex justify-between font-mono text-[11px] uppercase tracking-[0.08em] text-texto-3">
         <span>{s.code}</span>
         <span>{s.metric}</span>
       </div>
 
-      <h3 className="mt-[clamp(38px,6vw,64px)] mb-3 text-display-m">
-        {s.title}
+      {/* Stage title — serif editorial */}
+      <h3
+        className="mt-[clamp(28px,4vw,44px)] mb-3 font-serif leading-[1.02]"
+        style={{
+          fontSize: 'clamp(1.75rem, 2.6vw, 2.125rem)',
+          letterSpacing: '-0.02em',
+          fontWeight: 400,
+        }}
+      >
+        {s.stage}
       </h3>
 
+      {/* Italic claim — serif italic accent */}
       <p
-        className="mb-3 font-display font-medium text-texto-1"
-        style={{ fontSize: '0.9375rem', lineHeight: 1.5 }}
+        className="mb-[clamp(22px,2.8vw,30px)] font-serif italic text-texto-2"
+        style={{ fontSize: '1.125rem', lineHeight: 1.42, fontWeight: 400 }}
       >
         {s.claim}
       </p>
 
-      <p className="flex-1 text-body-brand text-texto-2">{s.description}</p>
-
-      <div className="mt-6 flex flex-wrap gap-[7px] border-t border-borde pt-5">
-        {s.tags.map((t) => (
-          <em
-            key={t}
-            className="not-italic rounded-[4px] border border-borde px-2 py-[5px] font-mono text-[10px] uppercase text-texto-3"
-            style={{ letterSpacing: '0.06em' }}
-          >
-            {t}
-          </em>
+      {/* Sub-services list — Inter workhorse */}
+      <ul className="flex flex-1 flex-col gap-[10px] border-t border-borde pt-5">
+        {s.subServices.map((sub) => (
+          <li key={sub.name} className="text-body-brand leading-[1.5]">
+            <span className="font-semibold text-texto-1">{sub.name}</span>
+            <span className="text-texto-3"> · {sub.detail}</span>
+          </li>
         ))}
-      </div>
+      </ul>
     </article>
   );
 }

@@ -37,7 +37,7 @@ export function Partner() {
                 >
                   <b
                     className="font-display font-bold"
-                    style={{ fontSize: '0.9375rem' }}
+                    style={{ fontSize: '1.0625rem' }}
                   >
                     {c.title}
                   </b>
@@ -70,7 +70,7 @@ export function Partner() {
             <div className="flex items-center justify-between gap-4 border-t border-borde px-[18px] py-4">
               <b
                 className="font-display font-bold"
-                style={{ fontSize: '0.9375rem' }}
+                style={{ fontSize: '1.0625rem' }}
               >
                 Partner certificado en México
               </b>

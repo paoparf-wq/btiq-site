@@ -1,16 +1,31 @@
-import { Bricolage_Grotesque, JetBrains_Mono } from 'next/font/google';
+import { Inter, Instrument_Serif, JetBrains_Mono } from 'next/font/google';
 
-/* btiq digital — dos familias, dos pesos cada una.
+/* btiq digital — sistema tipográfico Editorial (Opción A).
+   Instrument Serif para momentos display (hero, section heads, claims italic).
+   Inter como workhorse (UI, body, card titles, botones).
+   JetBrains Mono para etiquetas técnicas.
    Self-hosted por next/font (sin @import, sin CDN de terceros, subset latino).
-   Total: 4 archivos woff2. adjustFontFallback evita layout shift. */
+   adjustFontFallback evita layout shift. */
 
-export const display = Bricolage_Grotesque({
+// Workhorse sans — reemplaza Bricolage como fuente base del sistema.
+export const display = Inter({
   subsets: ['latin'],
-  weight: ['500', '700'],
+  weight: ['400', '500', '600', '700'],
   display: 'swap',
-  variable: '--font-bricolage',
+  variable: '--font-inter',
   adjustFontFallback: true,
-  fallback: ['Arial', 'Helvetica', 'sans-serif'],
+  fallback: ['system-ui', '-apple-system', 'Arial', 'sans-serif'],
+});
+
+// Editorial serif — solo para hero, section heads y claims italic.
+export const serif = Instrument_Serif({
+  subsets: ['latin'],
+  weight: ['400'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+  variable: '--font-instrument',
+  adjustFontFallback: true,
+  fallback: ['Georgia', 'Times New Roman', 'serif'],
 });
 
 export const mono = JetBrains_Mono({

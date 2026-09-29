@@ -3,7 +3,7 @@ import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import Script from 'next/script';
 import { StructuredData } from '@/components/StructuredData';
-import { display, mono } from '@/lib/fonts';
+import { display, serif, mono } from '@/lib/fonts';
 import './globals.css';
 
 const SITE_URL =
@@ -57,9 +57,9 @@ export default function RootLayout({
       lang="es"
       // 'dark' activa las CSS variables dark de shadcn para que los
       // componentes de Cult UI sean coherentes con la paleta dark del sitio.
-      // Cargamos las 4 fuentes en <html>: Bricolage+JetBrains para el home
-      // (Nómina × Marcador) y Geist Sans+Mono para /diagnostico legacy.
-      className={`dark ${display.variable} ${mono.variable} ${GeistSans.variable} ${GeistMono.variable}`}
+      // Cargamos las 5 fuentes en <html>: Inter + Instrument Serif + JetBrains
+      // para el home (Editorial), y Geist Sans + Mono para /diagnostico legacy.
+      className={`dark ${display.variable} ${serif.variable} ${mono.variable} ${GeistSans.variable} ${GeistMono.variable}`}
     >
       <body>
         <StructuredData />

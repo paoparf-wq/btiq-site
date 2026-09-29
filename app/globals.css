@@ -11,10 +11,10 @@
   }
 
   body {
-    /* Sistema "Nómina × Marcador" por default. /diagnostico y páginas
-       legacy sobreescriben con font-sans + text-ink explícitos. */
+    /* Sistema Editorial (Inter workhorse + Instrument Serif para display).
+       /diagnostico y páginas legacy sobreescriben con font-sans + text-ink. */
     @apply bg-base text-texto-1 font-display;
-    font-weight: 500;
+    font-weight: 400;
     font-synthesis-weight: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

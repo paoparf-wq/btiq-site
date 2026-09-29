@@ -96,12 +96,20 @@ const config: Config = {
   				'system-ui',
   				'sans-serif'
   			],
-  			// Display del nuevo home (Bricolage Grotesque).
+  			// Display del home Editorial (Inter — workhorse sans).
   			display: [
-  				'var(--font-bricolage)',
+  				'var(--font-inter)',
+  				'system-ui',
+  				'-apple-system',
   				'Arial',
-  				'Helvetica',
   				'sans-serif'
+  			],
+  			// Serif editorial (Instrument Serif) — hero, section heads, claims.
+  			serif: [
+  				'var(--font-instrument)',
+  				'Georgia',
+  				'Times New Roman',
+  				'serif'
   			],
   			// Mono compartido: JetBrains para el nuevo home; Geist Mono como
   			// fallback si Bricolage no cargó — en /diagnostico ambos son mono
@@ -118,8 +126,8 @@ const config: Config = {
   			'display-xl': ['clamp(3rem,7.4vw,6rem)', { lineHeight: '0.95', letterSpacing: '-0.03em', fontWeight: '700' }],
   			'display-l':  ['clamp(2.1rem,4.2vw,3.4rem)', { lineHeight: '0.98', letterSpacing: '-0.025em', fontWeight: '700' }],
   			'display-m':  ['1.5625rem', { lineHeight: '1.02', letterSpacing: '-0.02em', fontWeight: '700' }],
-  			'body-l':     ['1.125rem', { lineHeight: '1.55' }],
-  			'body-brand': ['0.9375rem', { lineHeight: '1.62' }],
+  			'body-l':     ['1.1875rem', { lineHeight: '1.55' }],
+  			'body-brand': ['1.0625rem', { lineHeight: '1.62' }],
   			'mono-label': ['0.6875rem', { lineHeight: '1', letterSpacing: '0.08em' }]
   		},
   		letterSpacing: {
