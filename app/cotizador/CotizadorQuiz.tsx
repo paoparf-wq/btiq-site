@@ -724,7 +724,7 @@ function PrimaryButton({
       onClick={onClick}
       disabled={disabled || loading}
       aria-busy={loading}
-      className="inline-flex items-center gap-2.5 rounded-[6px] bg-brand px-[22px] py-3 font-mono text-[11px] uppercase tracking-[0.08em] text-base transition-all ease-brand duration-[220ms] hover:-translate-y-0.5 hover:shadow-brand-hover disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
+      className="inline-flex items-center gap-2 rounded-[8px] bg-brand px-[24px] py-[14px] font-display text-[15px] font-semibold text-base transition-all ease-brand duration-[220ms] hover:-translate-y-0.5 hover:shadow-brand-hover disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
     >
       {children}
     </button>
@@ -974,7 +974,7 @@ function LiveReport({
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => events.whatsappClick('thankyou')}
-          className="mt-4 inline-flex w-full items-center justify-center gap-2.5 rounded-[6px] bg-brand px-[22px] py-4 font-mono text-[12px] uppercase tracking-[0.08em] text-base transition-all ease-brand duration-[220ms] hover:-translate-y-0.5 hover:shadow-brand-hover"
+          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[8px] bg-brand px-[24px] py-[16px] font-display text-[15px] font-semibold text-base transition-all ease-brand duration-[220ms] hover:-translate-y-0.5 hover:shadow-brand-hover"
         >
           Sí, quiero mi desglose <span aria-hidden="true">→</span>
         </a>
@@ -1045,7 +1045,7 @@ function TightReport({
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => events.whatsappClick('thankyou')}
-          className="inline-flex w-full items-center justify-center gap-2.5 rounded-[6px] bg-brand px-[22px] py-4 font-mono text-[12px] uppercase tracking-[0.08em] text-base transition-all ease-brand duration-[220ms] hover:-translate-y-0.5 hover:shadow-brand-hover"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-[8px] bg-brand px-[24px] py-[16px] font-display text-[15px] font-semibold text-base transition-all ease-brand duration-[220ms] hover:-translate-y-0.5 hover:shadow-brand-hover"
         >
           {ctaLabel} <span aria-hidden="true">→</span>
         </a>

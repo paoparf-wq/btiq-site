@@ -1,4 +1,4 @@
-import { Inter, Instrument_Serif, JetBrains_Mono } from 'next/font/google';
+import { Inter, Playfair_Display, JetBrains_Mono } from 'next/font/google';
 
 /* btiq digital — sistema tipográfico Editorial (Opción A).
    Instrument Serif para momentos display (hero, section heads, claims italic).
@@ -17,13 +17,14 @@ export const display = Inter({
   fallback: ['system-ui', '-apple-system', 'Arial', 'sans-serif'],
 });
 
-// Editorial serif — solo para hero, section heads y claims italic.
-export const serif = Instrument_Serif({
+// Editorial serif — Playfair Display para hero, section heads y claims.
+// Weights 500-800 para lograr presencia dramática que Instrument Serif no daba.
+export const serif = Playfair_Display({
   subsets: ['latin'],
-  weight: ['400'],
+  weight: ['500', '700', '800'],
   style: ['normal', 'italic'],
   display: 'swap',
-  variable: '--font-instrument',
+  variable: '--font-playfair',
   adjustFontFallback: true,
   fallback: ['Georgia', 'Times New Roman', 'serif'],
 });

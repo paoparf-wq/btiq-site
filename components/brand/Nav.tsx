@@ -63,7 +63,7 @@ export function Nav() {
               <a
                 key={l.href}
                 href={l.href}
-                className="font-mono text-[11px] uppercase tracking-[0.08em] text-texto-3 transition-colors hover:text-texto-1"
+                className="font-display text-[14px] font-medium text-texto-2 transition-colors hover:text-texto-1"
               >
                 {l.label}
               </a>
@@ -73,9 +73,9 @@ export function Nav() {
           <a
             href="#contacto"
             onClick={handleAgendaClick}
-            className="hidden items-center gap-2.5 rounded-[6px] bg-brand px-[18px] py-3 font-mono text-[11px] uppercase tracking-[0.08em] text-base transition-all ease-brand duration-[220ms] hover:-translate-y-0.5 hover:shadow-brand-hover lg:inline-flex"
+            className="hidden items-center gap-2 rounded-[8px] bg-brand px-[22px] py-[13px] font-display text-[14px] font-semibold text-base transition-all ease-brand duration-[220ms] hover:-translate-y-0.5 hover:shadow-brand-hover lg:inline-flex"
           >
-            Agenda una llamada
+            Agenda una llamada <span aria-hidden="true">→</span>
           </a>
 
           {/* Hamburguesa — visible bajo lg */}
@@ -144,9 +144,9 @@ export function Nav() {
               setOpen(false);
               handleAgendaClick();
             }}
-            className="flex w-full items-center justify-center gap-2.5 rounded-[6px] bg-brand px-[18px] py-3 font-mono text-[11px] uppercase tracking-[0.08em] text-base"
+            className="flex w-full items-center justify-center gap-2 rounded-[8px] bg-brand px-[22px] py-[15px] font-display text-[15px] font-semibold text-base"
           >
-            Agenda una llamada
+            Agenda una llamada <span aria-hidden="true">→</span>
           </a>
           <div className="text-center mono-label">
             {tokens.contact.email} · {tokens.contact.whatsapp}

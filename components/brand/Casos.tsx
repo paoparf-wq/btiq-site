@@ -81,7 +81,7 @@ export function Casos() {
 
               <h3
                 className="mt-3 font-serif leading-[1.1]"
-                style={{ fontSize: 'clamp(1.5rem, 2.3vw, 1.875rem)', letterSpacing: '-0.015em', fontWeight: 400 }}
+                style={{ fontSize: 'clamp(1.5rem, 2.3vw, 1.875rem)', letterSpacing: '-0.015em', fontWeight: 700 }}
               >
                 {c.cliente}
               </h3>
@@ -126,7 +126,7 @@ export function Casos() {
           <a
             href="#contacto"
             onClick={() => events.agendaCasosClick()}
-            className="inline-flex shrink-0 items-center gap-2.5 rounded-[6px] bg-brand px-[18px] py-3 font-mono text-[11px] uppercase tracking-[0.08em] text-base transition-all duration-[220ms] ease-brand hover:-translate-y-0.5 hover:shadow-brand-hover"
+            className="inline-flex shrink-0 items-center gap-2 rounded-[8px] bg-brand px-[24px] py-[14px] font-display text-[15px] font-semibold text-base transition-all duration-[220ms] ease-brand hover:-translate-y-0.5 hover:shadow-brand-hover"
           >
             Diagnóstico sin costo <span aria-hidden="true">→</span>
           </a>

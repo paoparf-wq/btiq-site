@@ -13,7 +13,7 @@ export function ThankyouWhatsappLink({ href }: { href: string }) {
       target="_blank"
       rel="noopener noreferrer"
       onClick={() => events.whatsappClick('thankyou')}
-      className="inline-flex items-center gap-2.5 rounded-[6px] bg-brand px-[18px] py-[13px] font-mono text-[11px] uppercase tracking-[0.08em] text-base transition-all ease-brand duration-[220ms] hover:-translate-y-0.5 hover:shadow-brand-hover"
+      className="inline-flex items-center gap-2 rounded-[8px] bg-brand px-[24px] py-[14px] font-display text-[15px] font-semibold text-base transition-all ease-brand duration-[220ms] hover:-translate-y-0.5 hover:shadow-brand-hover"
     >
       Adelántalo por WhatsApp <span aria-hidden="true">↗</span>
     </a>

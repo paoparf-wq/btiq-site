@@ -104,9 +104,9 @@ const config: Config = {
   				'Arial',
   				'sans-serif'
   			],
-  			// Serif editorial (Instrument Serif) — hero, section heads, claims.
+  			// Serif editorial (Playfair Display) — hero, section heads, claims.
   			serif: [
-  				'var(--font-instrument)',
+  				'var(--font-playfair)',
   				'Georgia',
   				'Times New Roman',
   				'serif'

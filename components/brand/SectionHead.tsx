@@ -16,7 +16,7 @@ export function SectionHead({
       <span className="font-mono text-[11px] tracking-[0.08em] text-texto-4">
         {number}
       </span>
-      <h2 className="font-serif text-display-l" style={{ fontWeight: 400 }}>
+      <h2 className="font-serif text-display-l" style={{ fontWeight: 700 }}>
         {title}
       </h2>
       {extra && (

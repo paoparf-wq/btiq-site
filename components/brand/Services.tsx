@@ -111,7 +111,7 @@ function ServiceCard({ service: s }: { service: Service }) {
         style={{
           fontSize: 'clamp(1.75rem, 2.6vw, 2.125rem)',
           letterSpacing: '-0.02em',
-          fontWeight: 400,
+          fontWeight: 700,
         }}
       >
         {s.stage}
@@ -120,7 +120,7 @@ function ServiceCard({ service: s }: { service: Service }) {
       {/* Italic claim — serif italic accent */}
       <p
         className="mb-[clamp(22px,2.8vw,30px)] font-serif italic text-texto-2"
-        style={{ fontSize: '1.125rem', lineHeight: 1.42, fontWeight: 400 }}
+        style={{ fontSize: '1.125rem', lineHeight: 1.42, fontWeight: 500 }}
       >
         {s.claim}
       </p>

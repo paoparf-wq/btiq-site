@@ -110,7 +110,7 @@ export function Hero() {
           </span>
         </div>
 
-        <h1 className="max-w-[17ch] font-serif text-display-xl" style={{ fontWeight: 400 }}>
+        <h1 className="max-w-[17ch] font-serif text-display-xl" style={{ fontWeight: 800 }}>
           No somos tu agencia. Estamos en tu{' '}
           <AnimatedMark>nómina</AnimatedMark>.
         </h1>
@@ -131,13 +131,13 @@ export function Hero() {
           <a
             href="#contacto"
             onClick={handlePrimaryClick}
-            className="inline-flex items-center gap-2.5 rounded-[6px] bg-brand px-[18px] py-3 font-mono text-[11px] uppercase tracking-[0.08em] text-base transition-all ease-brand duration-[220ms] hover:-translate-y-0.5 hover:shadow-brand-hover"
+            className="inline-flex items-center gap-2 rounded-[8px] bg-brand px-[24px] py-[14px] font-display text-[15px] font-semibold text-base transition-all ease-brand duration-[220ms] hover:-translate-y-0.5 hover:shadow-brand-hover"
           >
-            Agenda una llamada
+            Agenda una llamada <span aria-hidden="true">→</span>
           </a>
           <Link
             href="/cotizador"
-            className="inline-flex items-center gap-2.5 rounded-[6px] border border-borde bg-transparent px-[18px] py-3 font-mono text-[11px] uppercase tracking-[0.08em] text-texto-2 transition-colors duration-[220ms] hover:border-texto-4 hover:text-texto-1"
+            className="inline-flex items-center gap-2 rounded-[8px] border border-borde bg-transparent px-[24px] py-[14px] font-display text-[15px] font-semibold text-texto-2 transition-colors duration-[220ms] hover:border-texto-4 hover:text-texto-1"
           >
             Calcula tu ahorro <span aria-hidden="true">→</span>
           </Link>
