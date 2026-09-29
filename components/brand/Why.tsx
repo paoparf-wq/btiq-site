@@ -34,7 +34,7 @@ export function Why() {
     <section id="nosotros" className="border-t border-borde py-[clamp(72px,10vw,140px)]">
       <div className="mx-auto max-w-site px-gut">
         <SectionHead
-          number="03"
+          number="04"
           title={
             <>
               Calidad de global.

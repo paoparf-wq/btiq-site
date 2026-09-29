@@ -38,7 +38,7 @@ export function Faq() {
   return (
     <section id="faq" className="border-t border-borde py-[clamp(72px,10vw,140px)]">
       <div className="mx-auto max-w-site px-gut">
-        <SectionHead number="04" title="Lo que siempre nos preguntan." />
+        <SectionHead number="05" title="Lo que siempre nos preguntan." />
         <div className="border-t border-borde">
           {FAQ_ITEMS.map((f, i) => (
             <details

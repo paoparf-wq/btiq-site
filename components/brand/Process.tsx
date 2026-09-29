@@ -96,7 +96,7 @@ export function Process() {
     >
       <div className="mx-auto max-w-site px-gut">
         <SectionHead
-          number="02"
+          number="03"
           title="Cómo te llevamos del 0 al scale."
           extra="90 días"
         />

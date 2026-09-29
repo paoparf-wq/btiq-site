@@ -2,6 +2,7 @@ import { Nav } from '@/components/brand/Nav';
 import { Footer } from '@/components/brand/Footer';
 import { Hero } from '@/components/brand/Hero';
 import { Logos } from '@/components/brand/Logos';
+import { Casos } from '@/components/brand/Casos';
 import { Services } from '@/components/brand/Services';
 import { Partner } from '@/components/brand/Partner';
 import { Process } from '@/components/brand/Process';
@@ -26,6 +27,9 @@ export default function Page() {
         </SectionReveal>
         <SectionReveal>
           <Services />
+        </SectionReveal>
+        <SectionReveal>
+          <Casos />
         </SectionReveal>
         <SectionReveal>
           <Partner />

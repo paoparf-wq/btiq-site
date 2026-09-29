@@ -30,8 +30,9 @@ export const events = {
     trackEvent('whatsapp_click', { location }),
   agendaHeaderClick: () => trackEvent('agenda_click', { location: 'header' }),
   agendaHeroClick: () => trackEvent('agenda_click', { location: 'hero' }),
+  agendaCasosClick: () => trackEvent('agenda_click', { location: 'casos' }),
   // Adicionales
-  serviceSelect: (service: 'PERF' | 'WEB' | 'EVT') =>
+  serviceSelect: (service: 'PERF' | 'WEB' | 'EVT' | 'IM') =>
     trackEvent('service_select', { service }),
   faqOpen: (questionIndex: number) =>
     trackEvent('faq_open', { question_index: questionIndex }),

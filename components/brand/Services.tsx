@@ -5,7 +5,7 @@ import { SectionHead } from './SectionHead';
 // descripción → tags con hairline superior.
 
 type Service = {
-  code: 'PERF' | 'WEB' | 'EVT';
+  code: 'PERF' | 'WEB' | 'EVT' | 'IM';
   metric: string;
   title: string;
   claim: string;
@@ -41,6 +41,15 @@ const SERVICES: Service[] = [
       'Activaciones, lanzamientos y experiencias que generan leads cualificados, no solo asistencia.',
     tags: ['B2B', 'Producción', 'Activación'],
   },
+  {
+    code: 'IM',
+    metric: '6 metodologías',
+    title: 'Inteligencia de mercado',
+    claim: 'Decidir con datos, no con corazonadas.',
+    description:
+      'Estudios cuali/cuanti, geomarketing, neuromarketing y sistemas de evaluación de eventos. Convertimos incertidumbre en decisiones accionables.',
+    tags: ['Cuali/Cuanti', 'Geomarketing', 'Neuromarketing', 'EventScore'],
+  },
 ];
 
 export function Services() {
@@ -51,13 +60,13 @@ export function Services() {
           number="01"
           title={
             <>
-              Tres motores.
+              Cuatro motores.
               <br />
               Una promesa.
             </>
           }
         />
-        <div className="grid grid-cols-1 gap-[18px] lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-[18px] lg:grid-cols-2">
           {SERVICES.map((s) => (
             <ServiceCard key={s.code} service={s} />
           ))}
