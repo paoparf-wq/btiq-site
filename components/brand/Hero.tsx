@@ -1,8 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
 import Link from 'next/link';
-import { useInView } from 'motion/react';
 import { AnimatedNumber } from '@/components/ui/animated-number';
 import { AnimatedMark } from './AnimatedMark';
 import { events } from '@/lib/analytics';
@@ -38,6 +36,11 @@ const METRICS = [
   },
 ] as const;
 
+// Métrica numérica. El spring de AnimatedNumber se inicializa en el valor
+// final, así el número correcto se pinta desde el primer frame. Antes
+// gateábamos con useInView para animar de 0 al target, pero en producción
+// el observer no disparaba y las 3 métricas quedaban clavadas en 0 — un
+// dato roto es peor que una animación perdida.
 function CountUp({
   value,
   precision,
@@ -49,12 +52,10 @@ function CountUp({
   suffix: string;
   prefix?: string;
 }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: '-40px' });
   return (
-    <span ref={ref} className="tabular-nums">
+    <span className="tabular-nums">
       <AnimatedNumber
-        value={inView ? value : 0}
+        value={value}
         precision={precision}
         mass={1}
         stiffness={32}
